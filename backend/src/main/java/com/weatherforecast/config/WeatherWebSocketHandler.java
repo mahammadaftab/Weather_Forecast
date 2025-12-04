@@ -3,7 +3,7 @@ package com.weatherforecast.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weatherforecast.dto.WeatherResponseDTO;
 import com.weatherforecast.model.WeatherData;
-import com.weatherforecast.service.impl.WeatherServiceImpl;
+import com.weatherforecast.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WeatherWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
-    private WeatherServiceImpl weatherService;
+    private WeatherService weatherService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     
