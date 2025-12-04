@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # MongoDB database
+  mongodb:
+    image: mongo:latest
+    container_name: weather-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  # Backend service
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: weather-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/weather_forecast?authSource=admin
+      - OPENWEATHERMAP_API_KEY=your_openweathermap_api_key_here
+      - IPAPI_API_KEY=your_ipapi_key_here
+      - JWT_SECRET=weatherForecastSecretKey
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  # Frontend service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: weather-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:

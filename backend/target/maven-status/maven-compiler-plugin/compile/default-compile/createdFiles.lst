@@ -1,0 +1,2 @@
+com\weatherforecast\config\WebSocketConfig.class
+com\weatherforecast\config\WeatherWebSocketHandler.class
