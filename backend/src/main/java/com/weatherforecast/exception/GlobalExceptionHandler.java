@@ -17,8 +17,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleGenericException(Exception ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
-        body.put("details", request.getDescription(false));
+        body.put("status", "error");
+        body.put("message", "An unexpected error occurred");
+        body.put("details", ex.getMessage());
+        body.put("path", request.getDescription(false));
         
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -27,9 +29,49 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleRuntimeException(RuntimeException ex, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
-        body.put("details", request.getDescription(false));
+        body.put("status", "error");
+        body.put("message", "Invalid request or data");
+        body.put("details", ex.getMessage());
+        body.put("path", request.getDescription(false));
         
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+    
+    // Handle specific exceptions for better error reporting
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", "error");
+        body.put("message", "Invalid argument provided");
+        body.put("details", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<Object> handleNullPointerException(NullPointerException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", "error");
+        body.put("message", "Required data is missing");
+        body.put("details", ex.getMessage());
+        body.put("path", request.getDescription(false));
+        
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+    
+    // Handle API call failures with fallback data
+    @ExceptionHandler(java.net.ConnectException.class)
+    public ResponseEntity<Object> handleConnectException(java.net.ConnectException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", "warning");
+        body.put("message", "External service temporarily unavailable");
+        body.put("details", "Using cached data where available");
+        body.put("path", request.getDescription(false));
+        
+        return new ResponseEntity<>(body, HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

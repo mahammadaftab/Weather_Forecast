@@ -10,6 +10,7 @@ C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\mai
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\controller\package-info.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\controller\UserController.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\controller\WeatherController.java
+C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\data\DataInitializationService.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\dto\JwtResponseDTO.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\dto\LocationDTO.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\dto\LoginDTO.java
@@ -33,6 +34,7 @@ C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\mai
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\repository\UserLocationLogRepository.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\repository\UserRepository.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\repository\WeatherDataRepository.java
+C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\scheduled\WeatherDataFetcherService.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\service\BaseService.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\service\GeoLocationService.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\service\impl\LocationServiceImpl.java
@@ -44,4 +46,5 @@ C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\mai
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\service\WeatherApiService.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\service\WeatherService.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\util\JwtUtil.java
+C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\util\ValidationUtil.java
 C:\Users\mdaft\OneDrive\Desktop\GitHub Projects\Weather_Forecast\backend\src\main\java\com\weatherforecast\WeatherForecastApplication.java

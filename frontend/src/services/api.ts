@@ -14,12 +14,26 @@ const apiFetch = async (url: string, options: RequestInit = {}) => {
     });
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      // Try to parse error response
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // If we can't parse the error response, use the default message
+      }
+      throw new Error(errorMessage);
     }
     
     return await response.json();
   } catch (error) {
     console.error('API request failed:', error);
+    // Show user-friendly error message
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to the server. Please check your internet connection.');
+    }
     throw error;
   }
 };

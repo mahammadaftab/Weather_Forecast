@@ -16,8 +16,13 @@ public class State {
     private String code;
     
     private String name;
+    private String type; // State, Province, Region, etc.
+    private String capital;
+    private long population;
+    private double area; // in square kilometers
     private double latitude;
     private double longitude;
+    private String timezone;
     
     // Constructors
     public State() {}
@@ -61,6 +66,38 @@ public class State {
         this.name = name;
     }
     
+    public String getType() {
+        return type;
+    }
+    
+    public void setType(String type) {
+        this.type = type;
+    }
+    
+    public String getCapital() {
+        return capital;
+    }
+    
+    public void setCapital(String capital) {
+        this.capital = capital;
+    }
+    
+    public long getPopulation() {
+        return population;
+    }
+    
+    public void setPopulation(long population) {
+        this.population = population;
+    }
+    
+    public double getArea() {
+        return area;
+    }
+    
+    public void setArea(double area) {
+        this.area = area;
+    }
+    
     public double getLatitude() {
         return latitude;
     }
@@ -75,5 +112,13 @@ public class State {
     
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+    
+    public String getTimezone() {
+        return timezone;
+    }
+    
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

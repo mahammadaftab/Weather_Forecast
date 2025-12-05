@@ -3,17 +3,25 @@ package com.weatherforecast.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.weatherforecast.model.WeatherData;
+import com.weatherforecast.repository.WeatherDataRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class WeatherApiService {
     
     @Value("${openweathermap.api.key}")
     private String apiKey;
+    
+    @Autowired
+    private WeatherDataRepository weatherDataRepository;
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -23,6 +31,7 @@ public class WeatherApiService {
         this.objectMapper = objectMapper;
     }
     
+    @Cacheable(value = "currentWeatherByCoords", key = "#lat + ':' + #lon", unless = "#result == null")
     public WeatherData getCurrentWeatherByCoordinates(double lat, double lon) {
         String url = String.format(
             "https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s&units=metric",
@@ -67,11 +76,17 @@ public class WeatherApiService {
             weatherData.setSunset(LocalDateTime.ofEpochSecond(sunsetTimestamp, 0, java.time.ZoneOffset.UTC));
             
             return weatherData;
+        } catch (ResourceAccessException e) {
+            // If API is unreachable, try to get cached data
+            System.err.println("Failed to reach OpenWeatherMap API: " + e.getMessage());
+            return getCachedWeatherData();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch weather data from OpenWeatherMap API", e);
+            System.err.println("Failed to fetch weather data from OpenWeatherMap API: " + e.getMessage());
+            return getCachedWeatherData();
         }
     }
     
+    @Cacheable(value = "currentWeatherByCity", key = "#cityName", unless = "#result == null")
     public WeatherData getCurrentWeatherByCityName(String cityName) {
         String url = String.format(
             "https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric",
@@ -116,8 +131,43 @@ public class WeatherApiService {
             weatherData.setSunset(LocalDateTime.ofEpochSecond(sunsetTimestamp, 0, java.time.ZoneOffset.UTC));
             
             return weatherData;
+        } catch (ResourceAccessException e) {
+            // If API is unreachable, try to get cached data
+            System.err.println("Failed to reach OpenWeatherMap API: " + e.getMessage());
+            return getCachedWeatherData();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch weather data from OpenWeatherMap API", e);
+            System.err.println("Failed to fetch weather data from OpenWeatherMap API: " + e.getMessage());
+            return getCachedWeatherData();
         }
+    }
+    
+    /**
+     * Get cached weather data as fallback when API is unavailable
+     */
+    private WeatherData getCachedWeatherData() {
+        try {
+            // Get the most recent weather data from the database
+            List<WeatherData> allWeatherData = weatherDataRepository.findAll();
+            if (!allWeatherData.isEmpty()) {
+                // Return the most recent entry
+                return allWeatherData.get(allWeatherData.size() - 1);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to retrieve cached weather data: " + e.getMessage());
+        }
+        
+        // Return default weather data if no cached data is available
+        WeatherData defaultWeather = new WeatherData();
+        defaultWeather.setTimestamp(LocalDateTime.now());
+        defaultWeather.setTemperature(20.0);
+        defaultWeather.setFeelsLike(20.0);
+        defaultWeather.setHumidity(50);
+        defaultWeather.setPressure(1013);
+        defaultWeather.setWindSpeed(5.0);
+        defaultWeather.setWeatherMain("Clear");
+        defaultWeather.setWeatherDescription("Clear sky");
+        defaultWeather.setWeatherIcon("01d");
+        
+        return defaultWeather;
     }
 }

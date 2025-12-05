@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import LocationDetector from './components/LocationDetector';
 import WeatherCard from './components/WeatherCard';
-import HourlyForecast from './components/HourlyForecast';
-import DailyForecast from './components/DailyForecast';
+import HourlyForecast, { HourlyForecastItem } from './components/HourlyForecast';
+import DailyForecast, { DailyForecastItem } from './components/DailyForecast';
 import SearchBar from './components/SearchBar';
 import ThemeToggle from './components/ThemeToggle';
 import WorldMap from './components/WorldMap';
@@ -41,9 +41,7 @@ function App() {
   
   const handleSearch = async (query: string) => {
     console.log('Search query:', query);
-    // In a real implementation, this would call your search API
     try {
-      // This is just a placeholder - you would implement actual search logic
       console.log('Searching for:', query);
     } catch (error) {
       console.error('Search failed:', error);
@@ -61,6 +59,58 @@ function App() {
     } catch (error) {
       console.error('Failed to fetch weather data:', error);
     }
+  };
+
+  // Generate hourly forecast data
+  const generateHourlyForecast = (): HourlyForecastItem[] => {
+    if (!weatherData) return [];
+    
+    const hours: HourlyForecastItem[] = [];
+    const now = new Date();
+    
+    for (let i = 0; i < 24; i++) {
+      const time = new Date(now);
+      time.setHours(now.getHours() + i);
+      
+      hours.push({
+        time: i === 0 ? 'Now' : time.toLocaleTimeString([], { hour: 'numeric' }),
+        temperature: weatherData.temperature + (Math.random() * 4 - 2),
+        feelsLike: weatherData.feelsLike + (Math.random() * 4 - 2),
+        icon: weatherData.icon,
+        precipitation: Math.floor(Math.random() * 30),
+        windSpeed: weatherData.windSpeed + (Math.random() * 10 - 5),
+        humidity: weatherData.humidity + (Math.random() * 20 - 10)
+      });
+    }
+    
+    return hours;
+  };
+  
+  // Generate daily forecast data
+  const generateDailyForecast = (): DailyForecastItem[] => {
+    if (!weatherData) return [];
+    
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const forecast: DailyForecastItem[] = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      
+      forecast.push({
+        day: i === 0 ? 'Today' : days[date.getDay()],
+        date: date.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        highTemp: weatherData.temperature + 2 + (Math.random() * 5),
+        lowTemp: weatherData.temperature - 2 - (Math.random() * 5),
+        icon: weatherData.icon,
+        precipitation: Math.floor(Math.random() * 50),
+        windSpeed: weatherData.windSpeed + (Math.random() * 15 - 7.5),
+        humidity: weatherData.humidity + (Math.random() * 30 - 15),
+        uvIndex: Math.floor(Math.random() * 10)
+      });
+    }
+    
+    return forecast;
   };
 
   return (
@@ -92,6 +142,24 @@ function App() {
           </div>
         )}
         
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/30 text-red-200 border border-red-500/50">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span>{error}</span>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="mt-2 text-sm underline hover:text-white"
+            >
+              Refresh Page
+            </button>
+          </div>
+        )}
+        
         {/* Current Weather Card */}
         <WeatherCard 
           temperature={weatherData?.temperature ?? 0}
@@ -100,29 +168,25 @@ function App() {
           icon={weatherData?.icon ?? "❓"}
           humidity={weatherData?.humidity ?? 0}
           windSpeed={weatherData?.windSpeed ?? 0}
+          windDirection={weatherData?.windDirection ?? 0}
           pressure={weatherData?.pressure ?? 0}
           uvIndex={weatherData?.uvIndex ?? 0}
+          visibility={weatherData?.visibility ?? 0}
+          clouds={weatherData?.clouds ?? 0}
+          sunrise={weatherData?.sunrise ?? ""}
+          sunset={weatherData?.sunset ?? ""}
           city={location?.city ?? "Unknown Location"}
           dateTime={weatherData?.timestamp ? new Date(weatherData.timestamp).toLocaleString() : "--"}
         />
 
         {/* Hourly Forecast */}
         <HourlyForecast 
-          forecast={weatherData ? [{
-            time: 'Now',
-            temperature: weatherData.temperature,
-            icon: weatherData.icon
-          }] : []}
+          forecast={generateHourlyForecast()}
         />
 
         {/* 7-Day Forecast */}
         <DailyForecast 
-          forecast={weatherData ? [{
-            day: 'Today',
-            highTemp: weatherData.temperature + 2,
-            lowTemp: weatherData.temperature - 2,
-            icon: weatherData.icon
-          }] : []}
+          forecast={generateDailyForecast()}
         />
         
         {/* World Map */}

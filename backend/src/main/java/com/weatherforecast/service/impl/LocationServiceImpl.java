@@ -9,6 +9,9 @@ import com.weatherforecast.repository.StateRepository;
 import com.weatherforecast.service.GeoLocationService;
 import com.weatherforecast.service.LocationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,69 +33,92 @@ public class LocationServiceImpl implements LocationService {
     private GeoLocationService geoLocationService;
     
     @Override
+    @Cacheable(value = "allCountries", key = "'all'")
     public List<Country> getAllCountries() {
         return countryRepository.findAll();
     }
     
     @Override
+    @Cacheable(value = "countryById", key = "#id")
     public Optional<Country> getCountryById(String id) {
         return countryRepository.findById(id);
     }
     
     @Override
+    @Cacheable(value = "countryByCode", key = "#code")
     public Optional<Country> getCountryByCode(String code) {
         return countryRepository.findByCode(code);
     }
     
     @Override
+    @Cacheable(value = "statesByCountry", key = "#countryId")
     public List<State> getStatesByCountryId(String countryId) {
         return stateRepository.findByCountryId(countryId);
     }
     
     @Override
+    @Cacheable(value = "stateById", key = "#id")
     public Optional<State> getStateById(String id) {
         return stateRepository.findById(id);
     }
     
     @Override
+    @Cacheable(value = "stateByCode", key = "#code")
     public Optional<State> getStateByCode(String code) {
         return stateRepository.findByCode(code);
     }
     
     @Override
+    @Cacheable(value = "citiesByCountry", key = "#countryId")
     public List<City> getCitiesByCountryId(String countryId) {
         return cityRepository.findByCountryId(countryId);
     }
     
     @Override
+    @Cacheable(value = "citiesByState", key = "#stateId")
     public List<City> getCitiesByStateId(String stateId) {
         return cityRepository.findByStateId(stateId);
     }
     
     @Override
+    @Cacheable(value = "citiesByName", key = "#name")
     public List<City> searchCitiesByName(String name) {
         return cityRepository.findByNameContainingIgnoreCase(name);
     }
     
     @Override
+    @Cacheable(value = "searchCities", key = "#searchTerm + ':' + #pageable.pageNumber + ':' + #pageable.pageSize")
+    public Page<City> searchCities(String searchTerm, Pageable pageable) {
+        return cityRepository.findBySearchTerm(searchTerm, pageable);
+    }
+    
+    @Override
+    @Cacheable(value = "cityById", key = "#id")
     public Optional<City> getCityById(String id) {
         return cityRepository.findById(id);
     }
     
     @Override
+    @Cacheable(value = "cityByName", key = "#name")
     public Optional<City> getCityByName(String name) {
         return cityRepository.findByName(name);
     }
     
     @Override
-    public Optional<Country> detectCountryByCoordinates(double latitude, double longitude) {
-        // In a real implementation, we would use a reverse geocoding service
-        // or a database with coordinate mappings to countries
-        // This is a simplified implementation
-        return countryRepository.findAll().stream().findFirst();
+    @Cacheable(value = "citiesByCoordinates", key = "#minLat + ':' + #maxLat + ':' + #minLon + ':' + #maxLon")
+    public List<City> findCitiesByCoordinates(double minLat, double maxLat, double minLon, double maxLon) {
+        return cityRepository.findByCoordinatesWithinBounds(minLat, maxLat, minLon, maxLon);
     }
     
     @Override
+    @Cacheable(value = "countryByCoordinates", key = "#latitude + ':' + #longitude")
+    public Optional<Country> detectCountryByCoordinates(double latitude, double longitude) {
+        GeoLocationService.GeoLocation location = geoLocationService.reverseGeocode(latitude, longitude);
+        return countryRepository.findByCode(location.getCountryCode());
+    }
+    
+    @Override
+    @Cacheable(value = "stateByCoordinates", key = "#latitude + ':' + #longitude")
     public Optional<State> detectStateByCoordinates(double latitude, double longitude) {
         // In a real implementation, we would use a reverse geocoding service
         // or a database with coordinate mappings to states
@@ -101,10 +127,9 @@ public class LocationServiceImpl implements LocationService {
     }
     
     @Override
+    @Cacheable(value = "cityByCoordinates", key = "#latitude + ':' + #longitude")
     public Optional<City> detectCityByCoordinates(double latitude, double longitude) {
-        // In a real implementation, we would use a reverse geocoding service
-        // or a database with coordinate mappings to cities
-        // This is a simplified implementation
-        return cityRepository.findAll().stream().findFirst();
+        GeoLocationService.GeoLocation location = geoLocationService.reverseGeocode(latitude, longitude);
+        return cityRepository.findByName(location.getCityName());
     }
 }

@@ -12,13 +12,24 @@ public class Country {
     private String id;
     
     @Indexed(unique = true)
-    private String code;
+    private String code; // ISO 3166-1 alpha-2 code
     
+    @Indexed(unique = true)
+    private String code3; // ISO 3166-1 alpha-3 code
+    
+    private int numericCode; // ISO 3166-1 numeric code
     private String name;
     private String continent;
+    private String subregion;
+    private long population;
+    private double area; // in square kilometers
     private List<String> timezones;
+    private List<String> currencies;
+    private List<String> languages;
+    private String capital;
     private double latitude;
     private double longitude;
+    private String flagEmoji;
     
     // Constructors
     public Country() {}
@@ -46,6 +57,22 @@ public class Country {
         this.code = code;
     }
     
+    public String getCode3() {
+        return code3;
+    }
+    
+    public void setCode3(String code3) {
+        this.code3 = code3;
+    }
+    
+    public int getNumericCode() {
+        return numericCode;
+    }
+    
+    public void setNumericCode(int numericCode) {
+        this.numericCode = numericCode;
+    }
+    
     public String getName() {
         return name;
     }
@@ -62,12 +89,60 @@ public class Country {
         this.continent = continent;
     }
     
+    public String getSubregion() {
+        return subregion;
+    }
+    
+    public void setSubregion(String subregion) {
+        this.subregion = subregion;
+    }
+    
+    public long getPopulation() {
+        return population;
+    }
+    
+    public void setPopulation(long population) {
+        this.population = population;
+    }
+    
+    public double getArea() {
+        return area;
+    }
+    
+    public void setArea(double area) {
+        this.area = area;
+    }
+    
     public List<String> getTimezones() {
         return timezones;
     }
     
     public void setTimezones(List<String> timezones) {
         this.timezones = timezones;
+    }
+    
+    public List<String> getCurrencies() {
+        return currencies;
+    }
+    
+    public void setCurrencies(List<String> currencies) {
+        this.currencies = currencies;
+    }
+    
+    public List<String> getLanguages() {
+        return languages;
+    }
+    
+    public void setLanguages(List<String> languages) {
+        this.languages = languages;
+    }
+    
+    public String getCapital() {
+        return capital;
+    }
+    
+    public void setCapital(String capital) {
+        this.capital = capital;
     }
     
     public double getLatitude() {
@@ -84,5 +159,13 @@ public class Country {
     
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+    
+    public String getFlagEmoji() {
+        return flagEmoji;
+    }
+    
+    public void setFlagEmoji(String flagEmoji) {
+        this.flagEmoji = flagEmoji;
     }
 }
