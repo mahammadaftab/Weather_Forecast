@@ -3,6 +3,8 @@ package com.weatherforecast.controller;
 import com.weatherforecast.dto.WeatherResponseDTO;
 import com.weatherforecast.model.WeatherData;
 import com.weatherforecast.scheduled.WeatherDataFetcherService;
+import com.weatherforecast.service.LocationService;
+import com.weatherforecast.service.TimezoneService;
 import com.weatherforecast.service.impl.WeatherServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,18 +27,48 @@ public class WeatherController {
     @Autowired
     private WeatherDataFetcherService weatherDataFetcherService;
     
+    @Autowired
+    private LocationService locationService;
+    
+    @Autowired
+    private TimezoneService timezoneService;
+    
     // Public endpoint for current weather (no authentication required)
     @GetMapping("/public/current/{cityId}")
     public ResponseEntity<WeatherResponseDTO> getPublicCurrentWeather(@PathVariable String cityId) {
         return weatherService.getCurrentWeather(cityId)
-                .map(weatherData -> ResponseEntity.ok(new WeatherResponseDTO(weatherData)))
+                .map(weatherData -> {
+                    WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                    // Add timezone information if available
+                    locationService.getCityById(cityId).ifPresent(city -> {
+                        if (city.getTimezone() != null && !city.getTimezone().isEmpty()) {
+                            dto.setTimezone(city.getTimezone());
+                        } else {
+                            // If city doesn't have timezone, calculate it based on coordinates
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
+                        }
+                    });
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/current/{cityId}")
     public ResponseEntity<WeatherResponseDTO> getCurrentWeather(@PathVariable String cityId) {
         return weatherService.getCurrentWeather(cityId)
-                .map(weatherData -> ResponseEntity.ok(new WeatherResponseDTO(weatherData)))
+                .map(weatherData -> {
+                    WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                    // Add timezone information if available
+                    locationService.getCityById(cityId).ifPresent(city -> {
+                        if (city.getTimezone() != null && !city.getTimezone().isEmpty()) {
+                            dto.setTimezone(city.getTimezone());
+                        } else {
+                            // If city doesn't have timezone, calculate it based on coordinates
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
+                        }
+                    });
+                    return ResponseEntity.ok(dto);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -47,7 +79,19 @@ public class WeatherController {
             @RequestParam(defaultValue = "24") int hours) {
         List<WeatherData> weatherDataList = weatherService.getHourlyForecast(cityId, hours);
         List<WeatherResponseDTO> responseList = weatherDataList.stream()
-                .map(WeatherResponseDTO::new)
+                .map(weatherData -> {
+                    WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                    // Add timezone information if available
+                    locationService.getCityById(cityId).ifPresent(city -> {
+                        if (city.getTimezone() != null && !city.getTimezone().isEmpty()) {
+                            dto.setTimezone(city.getTimezone());
+                        } else {
+                            // If city doesn't have timezone, calculate it based on coordinates
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
+                        }
+                    });
+                    return dto;
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseList);
     }
@@ -58,7 +102,19 @@ public class WeatherController {
             @RequestParam(defaultValue = "24") int hours) {
         List<WeatherData> weatherDataList = weatherService.getHourlyForecast(cityId, hours);
         List<WeatherResponseDTO> responseList = weatherDataList.stream()
-                .map(WeatherResponseDTO::new)
+                .map(weatherData -> {
+                    WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                    // Add timezone information if available
+                    locationService.getCityById(cityId).ifPresent(city -> {
+                        if (city.getTimezone() != null && !city.getTimezone().isEmpty()) {
+                            dto.setTimezone(city.getTimezone());
+                        } else {
+                            // If city doesn't have timezone, calculate it based on coordinates
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
+                        }
+                    });
+                    return dto;
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseList);
     }
@@ -70,7 +126,19 @@ public class WeatherController {
             @RequestParam(defaultValue = "7") int days) {
         List<WeatherData> weatherDataList = weatherService.getDailyForecast(cityId, days);
         List<WeatherResponseDTO> responseList = weatherDataList.stream()
-                .map(WeatherResponseDTO::new)
+                .map(weatherData -> {
+                    WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                    // Add timezone information if available
+                    locationService.getCityById(cityId).ifPresent(city -> {
+                        if (city.getTimezone() != null && !city.getTimezone().isEmpty()) {
+                            dto.setTimezone(city.getTimezone());
+                        } else {
+                            // If city doesn't have timezone, calculate it based on coordinates
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
+                        }
+                    });
+                    return dto;
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseList);
     }
@@ -81,7 +149,19 @@ public class WeatherController {
             @RequestParam(defaultValue = "7") int days) {
         List<WeatherData> weatherDataList = weatherService.getDailyForecast(cityId, days);
         List<WeatherResponseDTO> responseList = weatherDataList.stream()
-                .map(WeatherResponseDTO::new)
+                .map(weatherData -> {
+                    WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                    // Add timezone information if available
+                    locationService.getCityById(cityId).ifPresent(city -> {
+                        if (city.getTimezone() != null && !city.getTimezone().isEmpty()) {
+                            dto.setTimezone(city.getTimezone());
+                        } else {
+                            // If city doesn't have timezone, calculate it based on coordinates
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
+                        }
+                    });
+                    return dto;
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(responseList);
     }
@@ -147,7 +227,10 @@ public class WeatherController {
             WeatherData weatherData = weatherService.getCurrentWeatherByCoordinates(lat, lon);
             
             if (weatherData != null) {
-                return ResponseEntity.ok(new WeatherResponseDTO(weatherData));
+                WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                // Set timezone for coordinates
+                dto.setTimezone(getTimezoneForCoordinates(lat, lon));
+                return ResponseEntity.ok(dto);
             } else {
                 return ResponseEntity.notFound().build();
             }
@@ -166,7 +249,12 @@ public class WeatherController {
         try {
             List<WeatherData> weatherDataList = weatherService.getHourlyForecastByCoordinates(lat, lon, hours);
             List<WeatherResponseDTO> responseList = weatherDataList.stream()
-                    .map(WeatherResponseDTO::new)
+                    .map(weatherData -> {
+                        WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                        // Set timezone for coordinates
+                        dto.setTimezone(getTimezoneForCoordinates(lat, lon));
+                        return dto;
+                    })
                     .collect(Collectors.toList());
             return ResponseEntity.ok(responseList);
         } catch (Exception e) {
@@ -184,7 +272,12 @@ public class WeatherController {
         try {
             List<WeatherData> weatherDataList = weatherService.getDailyForecastByCoordinates(lat, lon, days);
             List<WeatherResponseDTO> responseList = weatherDataList.stream()
-                    .map(WeatherResponseDTO::new)
+                    .map(weatherData -> {
+                        WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                        // Set timezone for coordinates
+                        dto.setTimezone(getTimezoneForCoordinates(lat, lon));
+                        return dto;
+                    })
                     .collect(Collectors.toList());
             return ResponseEntity.ok(responseList);
         } catch (Exception e) {
@@ -224,6 +317,8 @@ public class WeatherController {
                         if (weatherData != null) {
                             WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
                             dto.setCityName(city.getName() + ", " + city.getCountryCode());
+                            // Set timezone for each city
+                            dto.setTimezone(getTimezoneForCoordinates(city.getLatitude(), city.getLongitude()));
                             return dto;
                         }
                     } catch (Exception e) {
@@ -239,6 +334,11 @@ public class WeatherController {
             System.err.println("Failed to fetch world map weather: " + e.getMessage());
             return ResponseEntity.status(500).build();
         }
+    }
+    
+    // Helper method to get timezone for coordinates
+    private String getTimezoneForCoordinates(double latitude, double longitude) {
+        return timezoneService.getTimezoneForCoordinates(latitude, longitude);
     }
     
     // Helper class for world cities

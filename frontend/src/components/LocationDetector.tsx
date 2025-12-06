@@ -99,18 +99,18 @@ const LocationDetector: React.FC<LocationDetectorProps> = ({ onLocationDetected 
   return (
     <div className="mb-4">
       {isDetecting && (
-        <div className="flex items-center justify-center p-4 bg-blue-500/20 rounded-lg">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
-          <span className="text-white">Detecting your location...</span>
+        <div className="flex items-center justify-center p-4 bg-blue-500/20 rounded-lg dark:bg-blue-600/20">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2 dark:border-gray-300"></div>
+          <span className="text-white dark:text-gray-100">Detecting your location...</span>
         </div>
       )}
       
       {error && (
-        <div className="p-4 bg-red-500/20 rounded-lg text-white">
+        <div className="p-4 bg-red-500/20 rounded-lg text-white dark:bg-red-600/20 dark:text-gray-100">
           <p>{error}</p>
           <button 
             onClick={detectLocation}
-            className="mt-2 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition"
+            className="mt-2 px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition dark:bg-gray-700/30 dark:hover:bg-gray-600/30"
           >
             Try Again
           </button>

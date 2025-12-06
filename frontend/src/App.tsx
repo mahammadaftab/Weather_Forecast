@@ -128,13 +128,15 @@ function App() {
         data = await publicWeatherApi.getHourlyForecast(cityId, 24);
       }
       
+      console.log('Hourly forecast data:', data); // Debug log
+      
       // Transform the data to match the HourlyForecast component's expected structure
       const transformedData = data ? data.map((item: any) => ({
         time: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         temperature: item.temperature,
         feelsLike: item.feelsLike,
-        icon: item.weatherIcon || '❓',
-        precipitation: 0, // This would need to come from the API if available
+        icon: item.weatherIcon || item.icon || '❓',
+        precipitation: item.precipitation || item.rain || 0,
         windSpeed: item.windSpeed,
         humidity: item.humidity
       })) : [];
@@ -159,6 +161,8 @@ function App() {
         data = await publicWeatherApi.getDailyForecast(cityId, 7);
       }
       
+      console.log('Daily forecast data:', data); // Debug log
+      
       // Transform the data to match the DailyForecast component's expected structure
       const transformedData = data ? data.map((item: any, index: number) => {
         const date = new Date(item.timestamp);
@@ -176,10 +180,10 @@ function App() {
         return {
           day: dayName,
           date: date.toLocaleDateString([], { month: 'short', day: 'numeric' }),
-          highTemp: Math.round(item.temperature),
-          lowTemp: Math.round(item.temperature - 5), // This is just an approximation
-          icon: item.weatherIcon || '❓',
-          precipitation: 0, // This would need to come from the API if available
+          highTemp: Math.round(item.temperature || item.maxTemperature || 0),
+          lowTemp: Math.round(item.minTemperature || (item.temperature - 5) || 0),
+          icon: item.weatherIcon || item.icon || '❓',
+          precipitation: item.precipitation || item.rain || 0,
           windSpeed: item.windSpeed || 0,
           humidity: item.humidity || 0,
           uvIndex: item.uvIndex || 0
@@ -228,7 +232,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 text-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
       <header className="py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
@@ -262,6 +266,7 @@ function App() {
           sunset={weatherData?.sunset ?? ""}
           city={location?.city || weatherData?.cityName || "Unknown Location"}
           dateTime={weatherData?.timestamp ?? ""}
+          timezone={weatherData?.timezone}
         />
 
         {/* Hourly Forecast */}

@@ -26,6 +26,7 @@ public class WeatherResponseDTO {
     private LocalDateTime sunset;
     private double uvIndex;
     private List<WeatherAlert> alerts;
+    private String timezone;
     
     public WeatherResponseDTO() {}
     
@@ -48,6 +49,12 @@ public class WeatherResponseDTO {
         this.sunset = weatherData.getSunset();
         this.uvIndex = weatherData.getUvIndex();
         this.alerts = weatherData.getAlerts();
+        
+        // Try to get timezone from the city if available
+        if (weatherData.getCityId() != null && !weatherData.getCityId().isEmpty()) {
+            // In a real implementation, we would fetch the city and get its timezone
+            // For now, we'll leave it as null and it will be set by the controller when needed
+        }
     }
     
     // Getters and Setters
@@ -201,5 +208,13 @@ public class WeatherResponseDTO {
     
     public void setAlerts(List<WeatherAlert> alerts) {
         this.alerts = alerts;
+    }
+    
+    public String getTimezone() {
+        return timezone;
+    }
+    
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

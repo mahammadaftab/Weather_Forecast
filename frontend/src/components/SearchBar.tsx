@@ -117,14 +117,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onResultSelect }) => {
             onChange={handleInputChange}
             onFocus={() => query.length > 2 && setShowResults(true)}
             placeholder="Search for a city, country, or location..." 
-            className="w-full p-4 pl-12 rounded-2xl bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="w-full p-4 pl-12 rounded-2xl bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 dark:bg-gray-800/30 dark:text-gray-100 dark:placeholder-gray-300/70"
           />
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 absolute left-4 top-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 absolute left-4 top-4 text-white/70 dark:text-gray-300/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <button 
             type="submit"
-            className="absolute right-2 top-2 bottom-2 px-4 bg-white/20 rounded-xl hover:bg-white/30 transition"
+            className="absolute right-2 top-2 bottom-2 px-4 bg-white/20 rounded-xl hover:bg-white/30 transition dark:bg-gray-700/30 dark:hover:bg-gray-600/30"
           >
             Search
           </button>
@@ -133,10 +133,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onResultSelect }) => {
 
       {/* Autocomplete dropdown */}
       {showResults && (
-        <div className="absolute z-10 w-full max-w-2xl mt-2 bg-white/30 backdrop-blur-sm rounded-2xl shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-10 w-full max-w-2xl mt-2 bg-white/30 backdrop-blur-sm rounded-2xl shadow-lg max-h-60 overflow-y-auto dark:bg-gray-800/30">
           {isLoading ? (
-            <div className="p-4 text-center text-white">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto"></div>
+            <div className="p-4 text-center text-white dark:text-gray-100">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mx-auto dark:border-gray-300"></div>
               <p className="mt-2">Searching...</p>
             </div>
           ) : results.length > 0 ? (
@@ -145,17 +145,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onResultSelect }) => {
                 <li 
                   key={result.id}
                   onClick={() => handleResultClick(result)}
-                  className="p-4 hover:bg-white/20 cursor-pointer text-white border-b border-white/10 last:border-b-0"
+                  className="p-4 hover:bg-white/20 cursor-pointer text-white border-b border-white/10 last:border-b-0 dark:hover:bg-gray-700/20 dark:text-gray-100 dark:border-gray-700/50"
                 >
                   <div className="font-medium">{result.name}</div>
-                  <div className="text-sm text-white/80">
+                  <div className="text-sm text-white/80 dark:text-gray-300/80">
                     {result.state ? `${result.state}, ${result.country}` : result.country}
                   </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="p-4 text-center text-white">
+            <div className="p-4 text-center text-white dark:text-gray-100">
               No results found
             </div>
           )}

@@ -12,6 +12,7 @@ com\weatherforecast\model\State.class
 com\weatherforecast\repository\package-info.class
 com\weatherforecast\repository\WeatherDataRepository.class
 com\weatherforecast\repository\CountryRepository.class
+com\weatherforecast\service\impl\TimezoneServiceImpl.class
 com\weatherforecast\repository\CityRepository.class
 com\weatherforecast\service\GeoLocationService$GeoLocation.class
 com\weatherforecast\service\BaseService.class
@@ -39,6 +40,7 @@ com\weatherforecast\config\AppConfig.class
 com\weatherforecast\controller\GeolocationController.class
 com\weatherforecast\service\LocationService.class
 com\weatherforecast\dto\LocationDTO.class
+com\weatherforecast\controller\WeatherController$WorldCity.class
 com\weatherforecast\model\WeatherData.class
 com\weatherforecast\service\GeoLocationService.class
 com\weatherforecast\repository\StateRepository.class
@@ -50,4 +52,5 @@ com\weatherforecast\controller\UserController.class
 com\weatherforecast\controller\AuthController.class
 com\weatherforecast\repository\SettingsRepository.class
 com\weatherforecast\service\impl\LocationServiceImpl.class
+com\weatherforecast\service\TimezoneService.class
 com\weatherforecast\model\WeatherAlert.class

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { publicWeatherApi } from '../services/api';
 
 interface CityWeather {
   id: string;
@@ -21,23 +22,38 @@ const WorldMap: React.FC = () => {
   useEffect(() => {
     const fetchWorldWeather = async () => {
       try {
-        const response = await fetch('/api/weather/public/world-map');
-        const data = await response.json();
+        const data = await publicWeatherApi.getWorldMapWeather();
+        
+        console.log('World map data:', data); // Debug log
         
         // Transform API data to our CityWeather format
-        const transformedCities: CityWeather[] = data.map((item: any) => {
+        const transformedCities: CityWeather[] = data.map((item: any, index: number) => {
           // Extract city name and country code from cityName field
-          const [name, countryCode] = item.cityName ? item.cityName.split(', ') : ['Unknown', ''];
+          let name = 'Unknown';
+          let countryCode = '';
+          
+          if (item.cityName) {
+            const parts = item.cityName.split(', ');
+            name = parts[0] || 'Unknown';
+            countryCode = parts[1] || '';
+          }
+          
+          // Generate a unique ID to prevent duplicate keys
+          let uniqueId = item.cityId || item.id;
+          if (!uniqueId) {
+            // Create a unique ID based on coordinates and index to ensure uniqueness
+            uniqueId = `${item.latitude || 0}_${item.longitude || 0}_${index}`;
+          }
           
           return {
-            id: item.cityId || `${item.latitude || 0},${item.longitude || 0}`,
-            name: name || 'Unknown',
-            country: countryCode || '',
+            id: uniqueId,
+            name: name,
+            country: countryCode,
             latitude: item.latitude || 0,
             longitude: item.longitude || 0,
-            temperature: Math.round(item.temperature),
-            condition: item.weatherMain || 'Unknown',
-            weatherIcon: item.weatherIcon || ''
+            temperature: Math.round(item.temperature || 0),
+            condition: item.weatherMain || item.condition || 'Unknown',
+            weatherIcon: item.weatherIcon || item.icon || ''
           };
         });
         
@@ -116,10 +132,10 @@ const WorldMap: React.FC = () => {
 
   return (
     <div className="mb-8">
-      <h3 className="text-xl font-semibold text-white mb-4">World Weather Map</h3>
+      <h3 className="text-xl font-semibold text-white mb-4 dark:text-gray-100">World Weather Map</h3>
       <div 
         ref={mapRef}
-        className="relative w-full h-96 bg-blue-900/30 rounded-2xl overflow-hidden"
+        className="relative w-full h-96 bg-blue-900/30 rounded-2xl overflow-hidden dark:bg-gray-800/30"
       >
         {/* Simplified world map background */}
         <div className="absolute inset-0 bg-gradient-to-b from-blue-400/20 to-blue-600/20">
@@ -152,7 +168,7 @@ const WorldMap: React.FC = () => {
               
               {/* Temperature label */}
               {(isSelected || isHovered) && (
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-black/70 text-white text-xs rounded-lg py-1 px-2 whitespace-nowrap">
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-black/70 text-white text-xs rounded-lg py-1 px-2 whitespace-nowrap dark:bg-gray-700/80">
                   <div className="font-semibold">{city.name}, {city.country}</div>
                   <div>{city.temperature}°C - {city.condition}</div>
                 </div>
@@ -163,7 +179,7 @@ const WorldMap: React.FC = () => {
 
         {/* Selected city info panel */}
         {selectedCity && (
-          <div className="absolute bottom-4 left-4 right-4 bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white">
+          <div className="absolute bottom-4 left-4 right-4 bg-white/20 backdrop-blur-sm rounded-2xl p-4 text-white dark:bg-gray-800/30 dark:text-gray-100">
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="text-lg font-bold">{selectedCity.name}, {selectedCity.country}</h4>
@@ -171,13 +187,13 @@ const WorldMap: React.FC = () => {
                   <span className="text-3xl mr-2">{getWeatherIcon(selectedCity.condition, selectedCity.weatherIcon)}</span>
                   <div>
                     <div className="text-2xl font-light">{selectedCity.temperature}°C</div>
-                    <div className="text-white/80">{selectedCity.condition}</div>
+                    <div className="text-white/80 dark:text-gray-300/80">{selectedCity.condition}</div>
                   </div>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedCity(null)}
-                className="text-white/70 hover:text-white"
+                className="text-white/70 hover:text-white dark:text-gray-400 dark:hover:text-gray-200"
               >
                 ✕
               </button>

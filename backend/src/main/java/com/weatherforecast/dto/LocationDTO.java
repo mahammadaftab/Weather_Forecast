@@ -7,6 +7,7 @@ public class LocationDTO {
     private String stateCode;
     private double latitude;
     private double longitude;
+    private String timezone;
     
     // Constructors
     public LocationDTO() {}
@@ -18,6 +19,16 @@ public class LocationDTO {
         this.stateCode = stateCode;
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+    
+    public LocationDTO(String id, String name, String countryCode, String stateCode, double latitude, double longitude, String timezone) {
+        this.id = id;
+        this.name = name;
+        this.countryCode = countryCode;
+        this.stateCode = stateCode;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.timezone = timezone;
     }
     
     // Getters and Setters
@@ -67,5 +78,13 @@ public class LocationDTO {
     
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+    
+    public String getTimezone() {
+        return timezone;
+    }
+    
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
     }
 }

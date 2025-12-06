@@ -141,6 +141,11 @@ export const publicWeatherApi = {
   getDailyForecastByCoordinates: (lat: number, lon: number, days: number = 7) => {
     return apiFetch(`${API_BASE_URL}/weather/public/forecast/daily-by-coordinates?lat=${lat}&lon=${lon}&days=${days}`);
   },
+  
+  // World map weather data
+  getWorldMapWeather: () => {
+    return apiFetch(`${API_BASE_URL}/weather/public/world-map`);
+  }
 };
 
 // Weather API (requires authentication)

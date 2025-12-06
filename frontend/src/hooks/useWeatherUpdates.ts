@@ -18,6 +18,7 @@ interface WeatherData {
   sunset: string;
   timestamp: string;
   cityName?: string;
+  timezone?: string;
 }
 
 const useWeatherUpdates = (cityId: string | null, latitude?: number, longitude?: number) => {
@@ -82,7 +83,8 @@ const useWeatherUpdates = (cityId: string | null, latitude?: number, longitude?:
         sunrise: data.sunrise,
         sunset: data.sunset,
         timestamp: data.timestamp,
-        cityName: data.cityName
+        cityName: data.cityName,
+        timezone: data.timezone
       };
       
       setWeatherData(mappedData);

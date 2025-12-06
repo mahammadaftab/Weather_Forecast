@@ -140,7 +140,8 @@ public class LocationController {
                             countryName,
                             stateName,
                             city.getLatitude(),
-                            city.getLongitude());
+                            city.getLongitude(),
+                            city.getTimezone());
                 })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(locationDTOs);
