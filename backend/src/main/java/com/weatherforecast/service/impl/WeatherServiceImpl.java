@@ -9,10 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class WeatherServiceImpl implements WeatherService {
@@ -42,9 +46,35 @@ public class WeatherServiceImpl implements WeatherService {
     @Override
     @Cacheable(value = "dailyForecast", key = "#cityId + ':' + #days")
     public List<WeatherData> getDailyForecast(String cityId, int days) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime end = now.plusDays(days);
-        return weatherDataRepository.findByCityIdAndTimestampBetweenOrderByTimestampAsc(cityId, now, end);
+        // Start from the beginning of today to ensure we get data starting from today
+        LocalDateTime start = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime end = start.plusDays(days);
+        List<WeatherData> allData = weatherDataRepository.findByCityIdAndTimestampBetweenOrderByTimestampAsc(cityId, start, end);
+        
+        // Group by day and select one entry per day (preferably around noon)
+        Map<LocalDate, List<WeatherData>> groupedByDay = allData.stream()
+            .collect(Collectors.groupingBy(wd -> wd.getTimestamp().toLocalDate()));
+        
+        List<WeatherData> dailyForecast = new ArrayList<>();
+        
+        // Sort the dates and take one entry per day
+        List<LocalDate> sortedDates = groupedByDay.keySet().stream()
+            .sorted()
+            .limit(days)
+            .collect(Collectors.toList());
+        
+        for (LocalDate date : sortedDates) {
+            List<WeatherData> dayEntries = groupedByDay.get(date);
+            if (dayEntries != null && !dayEntries.isEmpty()) {
+                // Find the entry closest to noon (12:00) for this day
+                WeatherData noonEntry = dayEntries.stream()
+                    .min(Comparator.comparing(wd -> Math.abs(wd.getTimestamp().getHour() - 12)))
+                    .orElse(dayEntries.get(0));
+                dailyForecast.add(noonEntry);
+            }
+        }
+        
+        return dailyForecast;
     }
     
     @Override

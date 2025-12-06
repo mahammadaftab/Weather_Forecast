@@ -106,6 +106,13 @@ public class WeatherApiService {
             String jsonResponse = restTemplate.getForObject(url, String.class);
             JsonNode root = objectMapper.readTree(jsonResponse);
             
+            // Get sunrise and sunset times from the city object
+            JsonNode cityNode = root.path("city");
+            long sunriseTimestamp = cityNode.path("sunrise").asLong();
+            long sunsetTimestamp = cityNode.path("sunset").asLong();
+            LocalDateTime sunrise = LocalDateTime.ofEpochSecond(sunriseTimestamp, 0, java.time.ZoneOffset.UTC);
+            LocalDateTime sunset = LocalDateTime.ofEpochSecond(sunsetTimestamp, 0, java.time.ZoneOffset.UTC);
+            
             JsonNode list = root.path("list");
             if (list.isArray()) {
                 int count = 0;
@@ -115,6 +122,10 @@ public class WeatherApiService {
                     WeatherData weatherData = new WeatherData();
                     weatherData.setTimestamp(LocalDateTime.parse(item.path("dt_txt").asText(), 
                         java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                    
+                    // Set sunrise and sunset times for each forecast entry
+                    weatherData.setSunrise(sunrise);
+                    weatherData.setSunset(sunset);
                     
                     // Parse basic weather data
                     weatherData.setTemperature(item.path("main").path("temp").asDouble());
@@ -165,22 +176,49 @@ public class WeatherApiService {
         List<WeatherData> hourlyForecast = getHourlyForecastByCoordinates(lat, lon, days * 8); // ~8 entries per day
         List<WeatherData> dailyForecast = new ArrayList<>();
         
+        if (hourlyForecast.isEmpty()) {
+            return dailyForecast;
+        }
+        
+        // Get sunrise and sunset from the first entry
+        LocalDateTime sunrise = hourlyForecast.get(0).getSunrise();
+        LocalDateTime sunset = hourlyForecast.get(0).getSunset();
+        
         // Group by day and take the noon forecast for each day
         Map<LocalDate, List<WeatherData>> groupedByDay = hourlyForecast.stream()
             .collect(Collectors.groupingBy(wd -> wd.getTimestamp().toLocalDate()));
         
+        // Sort the dates to ensure we start from today
+        List<LocalDate> sortedDates = groupedByDay.keySet().stream()
+            .sorted()
+            .collect(Collectors.toList());
+        
+        // Start from today and get consecutive days
+        LocalDate today = LocalDate.now();
         int count = 0;
-        for (Map.Entry<LocalDate, List<WeatherData>> entry : groupedByDay.entrySet()) {
+        
+        for (LocalDate date : sortedDates) {
+            // Skip dates before today (but include today)
+            if (date.isBefore(today)) {
+                continue;
+            }
+            
             if (count >= days) break;
             
-            // Find the entry closest to noon (12:00) for this day
-            List<WeatherData> dayEntries = entry.getValue();
-            WeatherData noonEntry = dayEntries.stream()
-                .min(Comparator.comparing(wd -> Math.abs(wd.getTimestamp().getHour() - 12)))
-                .orElse(dayEntries.get(0));
-            
-            dailyForecast.add(noonEntry);
-            count++;
+            List<WeatherData> dayEntries = groupedByDay.get(date);
+            if (dayEntries != null && !dayEntries.isEmpty()) {
+                // Find the entry closest to noon (12:00) for this day
+                WeatherData noonEntry = dayEntries.stream()
+                    .min(Comparator.comparing(wd -> Math.abs(wd.getTimestamp().getHour() - 12)))
+                    .orElse(dayEntries.get(0));
+                
+                // Make sure sunrise and sunset are set
+                noonEntry.setSunrise(sunrise);
+                noonEntry.setSunset(sunset);
+                
+                dailyForecast.add(noonEntry);
+                count++;
+            }
         }
         
         return dailyForecast;

@@ -127,7 +127,19 @@ function App() {
         // Fetch by city ID
         data = await publicWeatherApi.getHourlyForecast(cityId, 24);
       }
-      setHourlyForecast(data || []);
+      
+      // Transform the data to match the HourlyForecast component's expected structure
+      const transformedData = data ? data.map((item: any) => ({
+        time: new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        temperature: item.temperature,
+        feelsLike: item.feelsLike,
+        icon: item.weatherIcon || '❓',
+        precipitation: 0, // This would need to come from the API if available
+        windSpeed: item.windSpeed,
+        humidity: item.humidity
+      })) : [];
+      
+      setHourlyForecast(transformedData);
     } catch (error) {
       console.error('Failed to fetch hourly forecast:', error);
       // Fallback to generated data if API fails
@@ -146,7 +158,35 @@ function App() {
         // Fetch by city ID
         data = await publicWeatherApi.getDailyForecast(cityId, 7);
       }
-      setDailyForecast(data || []);
+      
+      // Transform the data to match the DailyForecast component's expected structure
+      const transformedData = data ? data.map((item: any, index: number) => {
+        const date = new Date(item.timestamp);
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        // For the first item (today), show "Today" instead of the day name
+        // For subsequent items, calculate the correct day name based on today
+        let dayName;
+        if (index === 0) {
+          dayName = 'Today';
+        } else {
+          dayName = dayNames[date.getDay()];
+        }
+        
+        return {
+          day: dayName,
+          date: date.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+          highTemp: Math.round(item.temperature),
+          lowTemp: Math.round(item.temperature - 5), // This is just an approximation
+          icon: item.weatherIcon || '❓',
+          precipitation: 0, // This would need to come from the API if available
+          windSpeed: item.windSpeed || 0,
+          humidity: item.humidity || 0,
+          uvIndex: item.uvIndex || 0
+        };
+      }) : [];
+      
+      setDailyForecast(transformedData);
     } catch (error) {
       console.error('Failed to fetch daily forecast:', error);
       // Fallback to generated data if API fails
@@ -192,7 +232,7 @@ function App() {
       {/* Header */}
       <header className="py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Global Weather</h1>
+          <h1 className="text-4xl font-bold">Java Development Weather Forecast App</h1>
           <ThemeToggle />
         </div>
       </header>
@@ -221,7 +261,7 @@ function App() {
           sunrise={weatherData?.sunrise ?? ""}
           sunset={weatherData?.sunset ?? ""}
           city={location?.city || weatherData?.cityName || "Unknown Location"}
-          dateTime={weatherData?.timestamp ? new Date(weatherData.timestamp).toLocaleString() : "--"}
+          dateTime={weatherData?.timestamp ?? ""}
         />
 
         {/* Hourly Forecast */}
@@ -236,7 +276,7 @@ function App() {
 
       {/* Footer */}
       <footer className="py-6 px-4 text-center text-white/80">
-        <p>© 2023 Global Weather Forecasting Platform. All rights reserved.</p>
+        <p>© 2025 Java Development Weather Forecast App. All rights reserved.</p>
       </footer>
     </div>
   );

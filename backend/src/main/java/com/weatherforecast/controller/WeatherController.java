@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -189,5 +191,74 @@ public class WeatherController {
             System.err.println("Failed to fetch daily forecast by coordinates: " + e.getMessage());
             return ResponseEntity.status(500).build();
         }
+    }
+    
+    // Public endpoint to get current weather for multiple major cities
+    @GetMapping("/public/world-map")
+    public ResponseEntity<List<WeatherResponseDTO>> getWorldMapWeather() {
+        try {
+            // Define major cities around the world with their coordinates
+            List<WorldCity> majorCities = Arrays.asList(
+                new WorldCity("New York", "US", 40.7128, -74.0060),
+                new WorldCity("London", "GB", 51.5074, -0.1278),
+                new WorldCity("Tokyo", "JP", 35.6762, 139.6503),
+                new WorldCity("Sydney", "AU", -33.8688, 151.2093),
+                new WorldCity("Moscow", "RU", 55.7558, 37.6173),
+                new WorldCity("Rio de Janeiro", "BR", -22.9068, -43.1729),
+                new WorldCity("Cairo", "EG", 30.0444, 31.2357),
+                new WorldCity("Delhi", "IN", 28.6139, 77.2090),
+                new WorldCity("Beijing", "CN", 39.9042, 116.4074),
+                new WorldCity("Paris", "FR", 48.8566, 2.3522),
+                new WorldCity("Berlin", "DE", 52.5200, 13.4050),
+                new WorldCity("Toronto", "CA", 43.6532, -79.3832),
+                new WorldCity("Mexico City", "MX", 19.4326, -99.1332),
+                new WorldCity("Johannesburg", "ZA", -26.2041, 28.0473),
+                new WorldCity("Dubai", "AE", 25.2048, 55.2708)
+            );
+            
+            // Fetch current weather for each city
+            List<WeatherResponseDTO> worldWeather = majorCities.stream()
+                .map(city -> {
+                    try {
+                        WeatherData weatherData = weatherService.getCurrentWeatherByCoordinates(city.getLatitude(), city.getLongitude());
+                        if (weatherData != null) {
+                            WeatherResponseDTO dto = new WeatherResponseDTO(weatherData);
+                            dto.setCityName(city.getName() + ", " + city.getCountryCode());
+                            return dto;
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Failed to fetch weather for " + city.getName() + ": " + e.getMessage());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+                
+            return ResponseEntity.ok(worldWeather);
+        } catch (Exception e) {
+            System.err.println("Failed to fetch world map weather: " + e.getMessage());
+            return ResponseEntity.status(500).build();
+        }
+    }
+    
+    // Helper class for world cities
+    private static class WorldCity {
+        private String name;
+        private String countryCode;
+        private double latitude;
+        private double longitude;
+        
+        public WorldCity(String name, String countryCode, double latitude, double longitude) {
+            this.name = name;
+            this.countryCode = countryCode;
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+        
+        // Getters
+        public String getName() { return name; }
+        public String getCountryCode() { return countryCode; }
+        public double getLatitude() { return latitude; }
+        public double getLongitude() { return longitude; }
     }
 }

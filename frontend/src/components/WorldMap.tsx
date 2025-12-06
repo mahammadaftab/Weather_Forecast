@@ -8,24 +8,58 @@ interface CityWeather {
   longitude: number;
   temperature: number;
   condition: string;
+  weatherIcon?: string;
 }
 
 const WorldMap: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState<CityWeather | null>(null);
   const [hoveredCity, setHoveredCity] = useState<CityWeather | null>(null);
+  const [cities, setCities] = useState<CityWeather[]>([]);
   const mapRef = useRef<HTMLDivElement>(null);
 
-  // Mock city weather data
-  const cities: CityWeather[] = [
-    { id: '1', name: 'New York', country: 'US', latitude: 40.7128, longitude: -74.0060, temperature: 22, condition: 'Sunny' },
-    { id: '2', name: 'London', country: 'UK', latitude: 51.5074, longitude: -0.1278, temperature: 18, condition: 'Cloudy' },
-    { id: '3', name: 'Tokyo', country: 'JP', latitude: 35.6762, longitude: 139.6503, temperature: 25, condition: 'Rainy' },
-    { id: '4', name: 'Sydney', country: 'AU', latitude: -33.8688, longitude: 151.2093, temperature: 19, condition: 'Partly Cloudy' },
-    { id: '5', name: 'Moscow', country: 'RU', latitude: 55.7558, longitude: 37.6173, temperature: -5, condition: 'Snowy' },
-    { id: '6', name: 'Rio de Janeiro', country: 'BR', latitude: -22.9068, longitude: -43.1729, temperature: 30, condition: 'Sunny' },
-    { id: '7', name: 'Cairo', country: 'EG', latitude: 30.0444, longitude: 31.2357, temperature: 35, condition: 'Clear' },
-    { id: '8', name: 'Delhi', country: 'IN', latitude: 28.6139, longitude: 77.2090, temperature: 28, condition: 'Hazy' },
-  ];
+  // Fetch real weather data for major cities
+  useEffect(() => {
+    const fetchWorldWeather = async () => {
+      try {
+        const response = await fetch('/api/weather/public/world-map');
+        const data = await response.json();
+        
+        // Transform API data to our CityWeather format
+        const transformedCities: CityWeather[] = data.map((item: any) => {
+          // Extract city name and country code from cityName field
+          const [name, countryCode] = item.cityName ? item.cityName.split(', ') : ['Unknown', ''];
+          
+          return {
+            id: item.cityId || `${item.latitude || 0},${item.longitude || 0}`,
+            name: name || 'Unknown',
+            country: countryCode || '',
+            latitude: item.latitude || 0,
+            longitude: item.longitude || 0,
+            temperature: Math.round(item.temperature),
+            condition: item.weatherMain || 'Unknown',
+            weatherIcon: item.weatherIcon || ''
+          };
+        });
+        
+        setCities(transformedCities);
+      } catch (error) {
+        console.error('Failed to fetch world weather data:', error);
+        // Fallback to mock data if API fails
+        setCities([
+          { id: '1', name: 'New York', country: 'US', latitude: 40.7128, longitude: -74.0060, temperature: 22, condition: 'Sunny' },
+          { id: '2', name: 'London', country: 'UK', latitude: 51.5074, longitude: -0.1278, temperature: 18, condition: 'Cloudy' },
+          { id: '3', name: 'Tokyo', country: 'JP', latitude: 35.6762, longitude: 139.6503, temperature: 25, condition: 'Rainy' },
+          { id: '4', name: 'Sydney', country: 'AU', latitude: -33.8688, longitude: 151.2093, temperature: 19, condition: 'Partly Cloudy' },
+          { id: '5', name: 'Moscow', country: 'RU', latitude: 55.7558, longitude: 37.6173, temperature: -5, condition: 'Snowy' },
+          { id: '6', name: 'Rio de Janeiro', country: 'BR', latitude: -22.9068, longitude: -43.1729, temperature: 30, condition: 'Sunny' },
+          { id: '7', name: 'Cairo', country: 'EG', latitude: 30.0444, longitude: 31.2357, temperature: 35, condition: 'Clear' },
+          { id: '8', name: 'Delhi', country: 'IN', latitude: 28.6139, longitude: 77.2090, temperature: 28, condition: 'Hazy' },
+        ]);
+      }
+    };
+
+    fetchWorldWeather();
+  }, []);
 
   // Convert latitude/longitude to x/y coordinates on the map
   const convertToCoordinates = (latitude: number, longitude: number) => {
@@ -46,15 +80,36 @@ const WorldMap: React.FC = () => {
   };
 
   // Get weather icon
-  const getWeatherIcon = (condition: string) => {
+  const getWeatherIcon = (condition: string, iconCode?: string) => {
+    // If we have an icon code from the API, use it
+    if (iconCode) {
+      // Map OpenWeatherMap icon codes to emojis
+      const iconMap: Record<string, string> = {
+        '01d': '☀️', '01n': '🌙',
+        '02d': '⛅', '02n': '⛅',
+        '03d': '☁️', '03n': '☁️',
+        '04d': '☁️', '04n': '☁️',
+        '09d': '🌧️', '09n': '🌧️',
+        '10d': '🌦️', '10n': '🌦️',
+        '11d': '⛈️', '11n': '⛈️',
+        '13d': '❄️', '13n': '❄️',
+        '50d': '🌫️', '50n': '🌫️'
+      };
+      return iconMap[iconCode] || '🌡️';
+    }
+    
+    // Fallback to condition-based mapping
     switch (condition.toLowerCase()) {
       case 'sunny': return '☀️';
-      case 'cloudy': return '☁️';
-      case 'rainy': return '🌧️';
-      case 'snowy': return '❄️';
+      case 'clouds': return '☁️';
+      case 'rain': return '🌧️';
+      case 'snow': return '❄️';
       case 'clear': return '☀️';
-      case 'hazy': return '🌫️';
-      case 'partly cloudy': return '⛅';
+      case 'mist': return '🌫️';
+      case 'haze': return '🌫️';
+      case 'fog': return '🌫️';
+      case 'drizzle': return '🌦️';
+      case 'thunderstorm': return '⛈️';
       default: return '🌡️';
     }
   };
@@ -92,7 +147,7 @@ const WorldMap: React.FC = () => {
               onClick={() => setSelectedCity(city)}
             >
               <div className={`${getTemperatureColor(city.temperature)} w-6 h-6 rounded-full flex items-center justify-center text-white text-xs border-2 border-white/50`}>
-                {getWeatherIcon(city.condition)}
+                {getWeatherIcon(city.condition, city.weatherIcon)}
               </div>
               
               {/* Temperature label */}
@@ -113,7 +168,7 @@ const WorldMap: React.FC = () => {
               <div>
                 <h4 className="text-lg font-bold">{selectedCity.name}, {selectedCity.country}</h4>
                 <div className="flex items-center mt-1">
-                  <span className="text-3xl mr-2">{getWeatherIcon(selectedCity.condition)}</span>
+                  <span className="text-3xl mr-2">{getWeatherIcon(selectedCity.condition, selectedCity.weatherIcon)}</span>
                   <div>
                     <div className="text-2xl font-light">{selectedCity.temperature}°C</div>
                     <div className="text-white/80">{selectedCity.condition}</div>
