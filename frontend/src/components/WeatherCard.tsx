@@ -42,22 +42,49 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     return directions[index];
   };
 
-  // Format time from ISO string to HH:MM AM/PM
+  // Format time from ISO string to HH:MM AM/PM with timezone consideration
   const formatTime = (isoString: string) => {
     if (!isoString) return '--:--';
-    const date = new Date(isoString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+    } catch (error) {
+      return '--:--';
+    }
+  };
+
+  // Format date and time with timezone consideration
+  const formatDateTime = (isoString: string) => {
+    if (!isoString) return 'Unknown Date';
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleString([], {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+    } catch (error) {
+      return 'Unknown Date';
+    }
   };
 
   return (
     <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-6 mb-8 text-white">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h2 className="text-xl font-semibold mb-1">{city}</h2>
+          <h2 className="text-xl font-semibold mb-1">{city || 'Unknown Location'}</h2>
           <p className="text-white/80">{condition}</p>
         </div>
         <div className="text-right">
-          <p className="text-white/80">{dateTime}</p>
+          <p className="text-white/80">{formatDateTime(dateTime)}</p>
         </div>
       </div>
       

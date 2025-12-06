@@ -7,8 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/user")
-@CrossOrigin(origins = "*", maxAge = 3600)
+@RequestMapping("/api/users")
+@CrossOrigin(maxAge = 3600)
 public class UserController {
     
     @Autowired

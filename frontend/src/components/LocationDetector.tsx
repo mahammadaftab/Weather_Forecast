@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { geolocationApi, locationApi } from '../services/api';
-
-interface Location {
-  latitude: number;
-  longitude: number;
-  city?: string;
-  country?: string;
-}
+import { geolocationApi } from '../services/api';
 
 interface Location {
   latitude: number;
@@ -61,10 +54,16 @@ const LocationDetector: React.FC<LocationDetectorProps> = ({ onLocationDetected 
   };
 
   const findClosestCity = async (lat: number, lon: number) => {
-    // This is a simplified implementation
-    // In a real app, you would have a backend endpoint to find the closest city
-    // or use a geocoding service
-    console.log(`Finding closest city to ${lat}, ${lon}`);
+    try {
+      // In a real implementation, we would call a backend endpoint to find the closest city
+      // For now, we'll simulate this by searching for cities near the coordinates
+      console.log(`Finding closest city to ${lat}, ${lon}`);
+      
+      // We could implement a proper geocoding service here
+      // For now, we'll just log the coordinates
+    } catch (error) {
+      console.error('Failed to find closest city:', error);
+    }
   };
 
   const detectLocationByIP = async () => {
@@ -73,13 +72,20 @@ const LocationDetector: React.FC<LocationDetectorProps> = ({ onLocationDetected 
       const location: Location = {
         latitude: locationData.latitude,
         longitude: locationData.longitude,
-        city: locationData.name,
-        country: locationData.countryCode
+        city: locationData.name || 'Unknown Location',
+        country: locationData.countryCode || 'Unknown Country'
       };
       onLocationDetected(location);
     } catch (error) {
       console.error('Failed to detect location:', error);
-      setError('Failed to detect location. Please try again.');
+      // Provide a fallback location
+      const fallbackLocation: Location = {
+        latitude: 40.7128,
+        longitude: -74.0060,
+        city: 'New York',
+        country: 'US'
+      };
+      onLocationDetected(fallbackLocation);
     } finally {
       setIsDetecting(false);
     }

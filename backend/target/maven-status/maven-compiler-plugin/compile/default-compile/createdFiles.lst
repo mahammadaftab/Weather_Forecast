@@ -1,3 +1,4 @@
+com\weatherforecast\config\JacksonConfig.class
 com\weatherforecast\config\WebSocketConfig.class
 com\weatherforecast\service\impl\UserServiceImpl.class
 com\weatherforecast\repository\UserLocationLogRepository.class
@@ -20,6 +21,7 @@ com\weatherforecast\model\UserLocationLog.class
 com\weatherforecast\service\package-info.class
 com\weatherforecast\config\CacheConfig.class
 com\weatherforecast\config\package-info.class
+com\weatherforecast\config\AppConfig$1.class
 com\weatherforecast\dto\WeatherResponseDTO.class
 com\weatherforecast\scheduled\WeatherDataFetcherService.class
 com\weatherforecast\service\UserService.class

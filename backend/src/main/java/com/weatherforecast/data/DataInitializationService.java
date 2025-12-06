@@ -3,11 +3,15 @@ package com.weatherforecast.data;
 import com.weatherforecast.model.City;
 import com.weatherforecast.model.Country;
 import com.weatherforecast.model.State;
+import com.weatherforecast.model.User;
 import com.weatherforecast.repository.CityRepository;
 import com.weatherforecast.repository.CountryRepository;
 import com.weatherforecast.repository.StateRepository;
+import com.weatherforecast.repository.UserRepository;
+import com.weatherforecast.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -27,6 +31,12 @@ public class DataInitializationService implements CommandLineRunner {
 
     @Autowired
     private CityRepository cityRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
@@ -35,6 +45,16 @@ public class DataInitializationService implements CommandLineRunner {
             initializeCountries();
             initializeStates();
             initializeCities();
+        }
+        
+        // Create default user if not exists
+        if (userRepository.count() == 0) {
+            initializeDefaultUser();
+        }
+        
+        // Ensure we have at least one city for testing
+        if (cityRepository.count() == 0) {
+            initializeTestCity();
         }
     }
 
@@ -48,45 +68,6 @@ public class DataInitializationService implements CommandLineRunner {
             createCountry("CA", "CAN", 124, "Canada", "North America", "Northern America", 37742154, 9984670.0, Arrays.asList("CAD"), Arrays.asList("en", "fr"), "Ottawa"),
             createCountry("MX", "MEX", 484, "Mexico", "North America", "Central America", 128932753, 1964375.0, Arrays.asList("MXN"), Arrays.asList("es"), "Mexico City"),
             
-            // Europe
-            createCountry("GB", "GBR", 826, "United Kingdom", "Europe", "Northern Europe", 67886011, 242495.0, Arrays.asList("GBP"), Arrays.asList("en"), "London"),
-            createCountry("DE", "DEU", 276, "Germany", "Europe", "Western Europe", 83783942, 357114.0, Arrays.asList("EUR"), Arrays.asList("de"), "Berlin"),
-            createCountry("FR", "FRA", 250, "France", "Europe", "Western Europe", 65273511, 643801.0, Arrays.asList("EUR"), Arrays.asList("fr"), "Paris"),
-            createCountry("IT", "ITA", 380, "Italy", "Europe", "Southern Europe", 60461826, 301336.0, Arrays.asList("EUR"), Arrays.asList("it"), "Rome"),
-            createCountry("ES", "ESP", 724, "Spain", "Europe", "Southern Europe", 46754778, 505992.0, Arrays.asList("EUR"), Arrays.asList("es"), "Madrid"),
-            createCountry("RU", "RUS", 643, "Russia", "Europe", "Eastern Europe", 145934462, 17098242.0, Arrays.asList("RUB"), Arrays.asList("ru"), "Moscow"),
-            createCountry("SE", "SWE", 752, "Sweden", "Europe", "Northern Europe", 10099265, 450295.0, Arrays.asList("SEK"), Arrays.asList("sv"), "Stockholm"),
-            createCountry("NO", "NOR", 578, "Norway", "Europe", "Northern Europe", 5421241, 323802.0, Arrays.asList("NOK"), Arrays.asList("no"), "Oslo"),
-            createCountry("FI", "FIN", 246, "Finland", "Europe", "Northern Europe", 5540745, 338424.0, Arrays.asList("EUR"), Arrays.asList("fi", "sv"), "Helsinki"),
-            createCountry("DK", "DNK", 208, "Denmark", "Europe", "Northern Europe", 5792202, 43094.0, Arrays.asList("DKK"), Arrays.asList("da"), "Copenhagen"),
-            createCountry("NL", "NLD", 528, "Netherlands", "Europe", "Western Europe", 17134872, 41543.0, Arrays.asList("EUR"), Arrays.asList("nl"), "Amsterdam"),
-            createCountry("BE", "BEL", 56, "Belgium", "Europe", "Western Europe", 11589623, 30528.0, Arrays.asList("EUR"), Arrays.asList("nl", "fr", "de"), "Brussels"),
-            createCountry("CH", "CHE", 756, "Switzerland", "Europe", "Western Europe", 8654622, 41284.0, Arrays.asList("CHF"), Arrays.asList("de", "fr", "it"), "Bern"),
-            createCountry("AT", "AUT", 40, "Austria", "Europe", "Western Europe", 9006398, 83871.0, Arrays.asList("EUR"), Arrays.asList("de"), "Vienna"),
-            createCountry("PL", "POL", 616, "Poland", "Europe", "Eastern Europe", 37846611, 312679.0, Arrays.asList("PLN"), Arrays.asList("pl"), "Warsaw"),
-            createCountry("CZ", "CZE", 203, "Czech Republic", "Europe", "Eastern Europe", 10708981, 78865.0, Arrays.asList("CZK"), Arrays.asList("cs"), "Prague"),
-            createCountry("HU", "HUN", 348, "Hungary", "Europe", "Eastern Europe", 9660351, 93028.0, Arrays.asList("HUF"), Arrays.asList("hu"), "Budapest"),
-            
-            // Asia
-            createCountry("JP", "JPN", 392, "Japan", "Asia", "Eastern Asia", 126476461, 377930.0, Arrays.asList("JPY"), Arrays.asList("ja"), "Tokyo"),
-            createCountry("CN", "CHN", 156, "China", "Asia", "Eastern Asia", 1439323776, 9596960.0, Arrays.asList("CNY"), Arrays.asList("zh"), "Beijing"),
-            createCountry("IN", "IND", 356, "India", "Asia", "Southern Asia", 1380004385, 3287263.0, Arrays.asList("INR"), Arrays.asList("hi", "en"), "New Delhi"),
-            createCountry("KR", "KOR", 410, "South Korea", "Asia", "Eastern Asia", 51269185, 100210.0, Arrays.asList("KRW"), Arrays.asList("ko"), "Seoul"),
-            createCountry("TH", "THA", 764, "Thailand", "Asia", "South-Eastern Asia", 69799978, 513120.0, Arrays.asList("THB"), Arrays.asList("th"), "Bangkok"),
-            createCountry("VN", "VNM", 704, "Vietnam", "Asia", "South-Eastern Asia", 97338579, 331212.0, Arrays.asList("VND"), Arrays.asList("vi"), "Hanoi"),
-            createCountry("MY", "MYS", 458, "Malaysia", "Asia", "South-Eastern Asia", 32365999, 330803.0, Arrays.asList("MYR"), Arrays.asList("ms", "en"), "Kuala Lumpur"),
-            createCountry("SG", "SGP", 702, "Singapore", "Asia", "South-Eastern Asia", 5850342, 710.0, Arrays.asList("SGD"), Arrays.asList("en", "ms", "ta", "zh"), "Singapore"),
-            createCountry("ID", "IDN", 360, "Indonesia", "Asia", "South-Eastern Asia", 273523615, 1904569.0, Arrays.asList("IDR"), Arrays.asList("id"), "Jakarta"),
-            createCountry("PH", "PHL", 608, "Philippines", "Asia", "South-Eastern Asia", 109581078, 300000.0, Arrays.asList("PHP"), Arrays.asList("en", "tl"), "Manila"),
-            createCountry("TR", "TUR", 792, "Turkey", "Asia", "Western Asia", 84339067, 783562.0, Arrays.asList("TRY"), Arrays.asList("tr"), "Ankara"),
-            createCountry("IL", "ISR", 376, "Israel", "Asia", "Western Asia", 8655535, 20770.0, Arrays.asList("ILS"), Arrays.asList("he", "ar"), "Jerusalem"),
-            createCountry("SA", "SAU", 682, "Saudi Arabia", "Asia", "Western Asia", 34813871, 2149690.0, Arrays.asList("SAR"), Arrays.asList("ar"), "Riyadh"),
-            createCountry("AE", "ARE", 784, "United Arab Emirates", "Asia", "Western Asia", 9890402, 83600.0, Arrays.asList("AED"), Arrays.asList("ar"), "Abu Dhabi"),
-            
-            // Oceania
-            createCountry("AU", "AUS", 36, "Australia", "Oceania", "Australia and New Zealand", 25499884, 7692024.0, Arrays.asList("AUD"), Arrays.asList("en"), "Canberra"),
-            createCountry("NZ", "NZL", 554, "New Zealand", "Oceania", "Australia and New Zealand", 4822233, 270467.0, Arrays.asList("NZD"), Arrays.asList("en", "mi"), "Wellington"),
-            
             // South America
             createCountry("BR", "BRA", 76, "Brazil", "South America", "South America", 212559417, 8515767.0, Arrays.asList("BRL"), Arrays.asList("pt"), "Brasília"),
             createCountry("AR", "ARG", 32, "Argentina", "South America", "South America", 45195774, 2780400.0, Arrays.asList("ARS"), Arrays.asList("es"), "Buenos Aires"),
@@ -95,232 +76,97 @@ public class DataInitializationService implements CommandLineRunner {
             createCountry("CO", "COL", 170, "Colombia", "South America", "South America", 50882891, 1141748.0, Arrays.asList("COP"), Arrays.asList("es"), "Bogotá"),
             createCountry("VE", "VEN", 862, "Venezuela", "South America", "South America", 28435940, 916445.0, Arrays.asList("VES"), Arrays.asList("es"), "Caracas"),
             
+            // Europe
+            createCountry("GB", "GBR", 826, "United Kingdom", "Europe", "Northern Europe", 67886011, 242495.0, Arrays.asList("GBP"), Arrays.asList("en"), "London"),
+            createCountry("DE", "DEU", 276, "Germany", "Europe", "Western Europe", 83783942, 357114.0, Arrays.asList("EUR"), Arrays.asList("de"), "Berlin"),
+            createCountry("FR", "FRA", 250, "France", "Europe", "Western Europe", 65273511, 643801.0, Arrays.asList("EUR"), Arrays.asList("fr"), "Paris"),
+            createCountry("IT", "ITA", 380, "Italy", "Europe", "Southern Europe", 60461826, 301340.0, Arrays.asList("EUR"), Arrays.asList("it"), "Rome"),
+            createCountry("ES", "ESP", 724, "Spain", "Europe", "Southern Europe", 46754778, 505992.0, Arrays.asList("EUR"), Arrays.asList("es"), "Madrid"),
+            createCountry("NL", "NLD", 528, "Netherlands", "Europe", "Western Europe", 17134872, 41543.0, Arrays.asList("EUR"), Arrays.asList("nl"), "Amsterdam"),
+            createCountry("PL", "POL", 616, "Poland", "Europe", "Eastern Europe", 37846611, 312696.0, Arrays.asList("PLN"), Arrays.asList("pl"), "Warsaw"),
+            createCountry("SE", "SWE", 752, "Sweden", "Europe", "Northern Europe", 10099265, 450295.0, Arrays.asList("SEK"), Arrays.asList("sv"), "Stockholm"),
+            createCountry("NO", "NOR", 578, "Norway", "Europe", "Northern Europe", 5421241, 323802.0, Arrays.asList("NOK"), Arrays.asList("no"), "Oslo"),
+            createCountry("CH", "CHE", 756, "Switzerland", "Europe", "Western Europe", 8654622, 41284.0, Arrays.asList("CHF"), Arrays.asList("de", "fr", "it"), "Bern"),
+            createCountry("RU", "RUS", 643, "Russia", "Europe", "Eastern Europe", 145934462, 17098242.0, Arrays.asList("RUB"), Arrays.asList("ru"), "Moscow"),
+            
+            // Asia
+            createCountry("CN", "CHN", 156, "China", "Asia", "Eastern Asia", 1439323776, 9596961.0, Arrays.asList("CNY"), Arrays.asList("zh"), "Beijing"),
+            createCountry("JP", "JPN", 392, "Japan", "Asia", "Eastern Asia", 126476461, 377975.0, Arrays.asList("JPY"), Arrays.asList("ja"), "Tokyo"),
+            createCountry("IN", "IND", 356, "India", "Asia", "Southern Asia", 1380004385, 3287263.0, Arrays.asList("INR"), Arrays.asList("hi", "en"), "New Delhi"),
+            createCountry("KR", "KOR", 410, "South Korea", "Asia", "Eastern Asia", 51269185, 100210.0, Arrays.asList("KRW"), Arrays.asList("ko"), "Seoul"),
+            createCountry("TR", "TUR", 792, "Turkey", "Asia", "Western Asia", 84339067, 783562.0, Arrays.asList("TRY"), Arrays.asList("tr"), "Ankara"),
+            createCountry("SA", "SAU", 682, "Saudi Arabia", "Asia", "Western Asia", 34813871, 2149690.0, Arrays.asList("SAR"), Arrays.asList("ar"), "Riyadh"),
+            createCountry("ID", "IDN", 360, "Indonesia", "Asia", "South-Eastern Asia", 273523615, 1904569.0, Arrays.asList("IDR"), Arrays.asList("id"), "Jakarta"),
+            createCountry("TH", "THA", 764, "Thailand", "Asia", "South-Eastern Asia", 69799978, 513120.0, Arrays.asList("THB"), Arrays.asList("th"), "Bangkok"),
+            createCountry("VN", "VNM", 704, "Vietnam", "Asia", "South-Eastern Asia", 97338579, 331212.0, Arrays.asList("VND"), Arrays.asList("vi"), "Hanoi"),
+            
             // Africa
-            createCountry("ZA", "ZAF", 710, "South Africa", "Africa", "Southern Africa", 59308690, 1221037.0, Arrays.asList("ZAR"), Arrays.asList("zu", "xh", "af", "en", "tn", "st", "ts", "ss", "ve", "nr"), "Pretoria"),
-            createCountry("EG", "EGY", 818, "Egypt", "Africa", "Northern Africa", 102334404, 1002450.0, Arrays.asList("EGP"), Arrays.asList("ar"), "Cairo"),
+            createCountry("ZA", "ZAF", 710, "South Africa", "Africa", "Southern Africa", 59308690, 1221037.0, Arrays.asList("ZAR"), Arrays.asList("en", "af", "zu"), "Pretoria"),
             createCountry("NG", "NGA", 566, "Nigeria", "Africa", "Western Africa", 206139589, 923768.0, Arrays.asList("NGN"), Arrays.asList("en"), "Abuja"),
-            createCountry("KE", "KEN", 404, "Kenya", "Africa", "Eastern Africa", 53771296, 580367.0, Arrays.asList("KES"), Arrays.asList("sw", "en"), "Nairobi"),
-            createCountry("MA", "MAR", 504, "Morocco", "Africa", "Northern Africa", 36910560, 446550.0, Arrays.asList("MAD"), Arrays.asList("ar", "fr"), "Rabat")
+            createCountry("EG", "EGY", 818, "Egypt", "Africa", "Northern Africa", 102334404, 1002450.0, Arrays.asList("EGP"), Arrays.asList("ar"), "Cairo"),
+            createCountry("KE", "KEN", 404, "Kenya", "Africa", "Eastern Africa", 53771296, 580367.0, Arrays.asList("KES"), Arrays.asList("en", "sw"), "Nairobi"),
+            createCountry("MA", "MAR", 504, "Morocco", "Africa", "Northern Africa", 36910560, 446550.0, Arrays.asList("MAD"), Arrays.asList("ar", "fr"), "Rabat"),
+            
+            // Oceania
+            createCountry("AU", "AUS", 36, "Australia", "Oceania", "Australia and New Zealand", 25499884, 7692024.0, Arrays.asList("AUD"), Arrays.asList("en"), "Canberra"),
+            createCountry("NZ", "NZL", 554, "New Zealand", "Oceania", "Australia and New Zealand", 4822233, 270467.0, Arrays.asList("NZD"), Arrays.asList("en"), "Wellington")
         );
-
+        
         countryRepository.saveAll(countries);
-        System.out.println("Initialized " + countries.size() + " countries");
+        System.out.println("✅ Initialized " + countries.size() + " countries");
     }
     
-    /**
-     * Helper method to create a country with comprehensive data
-     */
-    private Country createCountry(String code2, String code3, int numericCode, String name, String continent, String subregion, long population, double area, List<String> currencies, List<String> languages, String capital) {
-        Country country = new Country();
-        country.setCode(code2);
-        country.setCode3(code3);
-        country.setNumericCode(numericCode);
-        country.setName(name);
-        country.setContinent(continent);
-        country.setSubregion(subregion);
-        country.setPopulation(population);
-        country.setArea(area);
-        country.setCurrencies(currencies);
-        country.setLanguages(languages);
-        country.setCapital(capital);
-        // Set flag emoji based on country code
-        country.setFlagEmoji(getFlagEmoji(code2));
-        return country;
-    }
-    
-    /**
-     * Helper method to get flag emoji from country code
-     */
-    private String getFlagEmoji(String countryCode) {
-        if (countryCode == null || countryCode.length() != 2) {
-            return "🌐";
-        }
-        int firstLetter = Character.codePointAt(countryCode, 0) - 0x41 + 0x1F1E6;
-        int secondLetter = Character.codePointAt(countryCode, 1) - 0x41 + 0x1F1E6;
-        return new String(Character.toChars(firstLetter)) + new String(Character.toChars(secondLetter));
-    }
-
     /**
      * Initialize states/provinces with real data
      */
     private void initializeStates() {
-        List<State> states = Arrays.asList(
-            // United States - More comprehensive list
-            createState(getCountryIdByCode("US"), "AL", "Alabama", "State", "Montgomery", 4903185, 135765.0, 32.377761, -86.300781, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "AK", "Alaska", "State", "Juneau", 731545, 1723337.0, 58.301944, -134.419722, "America/Anchorage"),
-            createState(getCountryIdByCode("US"), "AZ", "Arizona", "State", "Phoenix", 7278717, 295234.0, 33.448376, -112.074036, "America/Phoenix"),
-            createState(getCountryIdByCode("US"), "AR", "Arkansas", "State", "Little Rock", 3017804, 137732.0, 34.746481, -92.289595, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "CA", "California", "State", "Sacramento", 39512223, 423970.0, 38.581572, -121.494400, "America/Los_Angeles"),
-            createState(getCountryIdByCode("US"), "CO", "Colorado", "State", "Denver", 5758736, 269601.0, 39.739235, -104.990250, "America/Denver"),
-            createState(getCountryIdByCode("US"), "CT", "Connecticut", "State", "Hartford", 3565287, 14357.0, 41.763711, -72.685093, "America/New_York"),
-            createState(getCountryIdByCode("US"), "DE", "Delaware", "State", "Dover", 973764, 6446.0, 39.158168, -75.524368, "America/New_York"),
-            createState(getCountryIdByCode("US"), "FL", "Florida", "State", "Tallahassee", 21477737, 170312.0, 30.438256, -84.280731, "America/New_York"),
-            createState(getCountryIdByCode("US"), "GA", "Georgia", "State", "Atlanta", 10617423, 153910.0, 33.748995, -84.387982, "America/New_York"),
-            createState(getCountryIdByCode("US"), "HI", "Hawaii", "State", "Honolulu", 1415872, 28313.0, 21.306944, -157.858333, "Pacific/Honolulu"),
-            createState(getCountryIdByCode("US"), "ID", "Idaho", "State", "Boise", 1787065, 216443.0, 43.615020, -116.202316, "America/Boise"),
-            createState(getCountryIdByCode("US"), "IL", "Illinois", "State", "Springfield", 12671821, 149995.0, 39.798366, -89.654961, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "IN", "Indiana", "State", "Indianapolis", 6732219, 94326.0, 39.768402, -86.158066, "America/Indiana/Indianapolis"),
-            createState(getCountryIdByCode("US"), "IA", "Iowa", "State", "Des Moines", 3155070, 145746.0, 41.586836, -93.624954, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "KS", "Kansas", "State", "Topeka", 2913314, 213112.0, 39.055824, -95.689018, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "KY", "Kentucky", "State", "Frankfort", 4467673, 104749.0, 38.200905, -84.873283, "America/Kentucky/Louisville"),
-            createState(getCountryIdByCode("US"), "LA", "Louisiana", "State", "Baton Rouge", 4648794, 135382.0, 30.451468, -91.187149, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "ME", "Maine", "State", "Augusta", 1344212, 91633.0, 44.310624, -69.779495, "America/New_York"),
-            createState(getCountryIdByCode("US"), "MD", "Maryland", "State", "Annapolis", 6045680, 32133.0, 38.978445, -76.492183, "America/New_York"),
-            createState(getCountryIdByCode("US"), "MA", "Massachusetts", "State", "Boston", 6892503, 27336.0, 42.358433, -71.059773, "America/New_York"),
-            createState(getCountryIdByCode("US"), "MI", "Michigan", "State", "Lansing", 9986857, 250487.0, 42.732535, -84.555535, "America/Detroit"),
-            createState(getCountryIdByCode("US"), "MN", "Minnesota", "State", "Saint Paul", 5639632, 225163.0, 44.953703, -93.089958, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "MS", "Mississippi", "State", "Jackson", 2976149, 125438.0, 32.298757, -90.184810, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "MO", "Missouri", "State", "Jefferson City", 6137428, 180533.0, 38.576702, -92.173516, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "MT", "Montana", "State", "Helena", 1068778, 380831.0, 46.588371, -112.024505, "America/Denver"),
-            createState(getCountryIdByCode("US"), "NE", "Nebraska", "State", "Lincoln", 1934408, 200330.0, 40.813616, -96.702596, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "NV", "Nevada", "State", "Carson City", 3080156, 286380.0, 39.163798, -119.767403, "America/Los_Angeles"),
-            createState(getCountryIdByCode("US"), "NH", "New Hampshire", "State", "Concord", 1359711, 24214.0, 43.208167, -71.537572, "America/New_York"),
-            createState(getCountryIdByCode("US"), "NJ", "New Jersey", "State", "Trenton", 8882190, 22591.0, 40.220587, -74.759717, "America/New_York"),
-            createState(getCountryIdByCode("US"), "NM", "New Mexico", "State", "Santa Fe", 2096829, 314917.0, 35.682211, -105.939724, "America/Denver"),
-            createState(getCountryIdByCode("US"), "NY", "New York", "State", "Albany", 19453561, 141297.0, 42.652579, -73.756232, "America/New_York"),
-            createState(getCountryIdByCode("US"), "NC", "North Carolina", "State", "Raleigh", 10488084, 139391.0, 35.779590, -78.638176, "America/New_York"),
-            createState(getCountryIdByCode("US"), "ND", "North Dakota", "State", "Bismarck", 779094, 183272.0, 46.808327, -100.783739, "America/North_Dakota/Center"),
-            createState(getCountryIdByCode("US"), "OH", "Ohio", "State", "Columbus", 11689100, 116098.0, 39.961176, -82.998794, "America/New_York"),
-            createState(getCountryIdByCode("US"), "OK", "Oklahoma", "State", "Oklahoma City", 3956971, 181195.0, 35.467560, -97.516428, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "OR", "Oregon", "State", "Salem", 4217737, 254799.0, 44.942898, -123.035096, "America/Los_Angeles"),
-            createState(getCountryIdByCode("US"), "PA", "Pennsylvania", "State", "Harrisburg", 12801989, 119283.0, 40.273191, -76.886701, "America/New_York"),
-            createState(getCountryIdByCode("US"), "RI", "Rhode Island", "State", "Providence", 1059361, 4001.0, 41.823989, -71.412834, "America/New_York"),
-            createState(getCountryIdByCode("US"), "SC", "South Carolina", "State", "Columbia", 5148714, 82932.0, 34.000710, -81.034813, "America/New_York"),
-            createState(getCountryIdByCode("US"), "SD", "South Dakota", "State", "Pierre", 884659, 199729.0, 44.366843, -100.353759, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "TN", "Tennessee", "State", "Nashville", 6829174, 109247.0, 36.162664, -86.781602, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "TX", "Texas", "State", "Austin", 28995881, 695662.0, 30.267153, -97.743061, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "UT", "Utah", "State", "Salt Lake City", 3205958, 219882.0, 40.760779, -111.891047, "America/Denver"),
-            createState(getCountryIdByCode("US"), "VT", "Vermont", "State", "Montpelier", 623989, 24906.0, 44.260059, -72.575387, "America/New_York"),
-            createState(getCountryIdByCode("US"), "VA", "Virginia", "State", "Richmond", 8535519, 110787.0, 37.540725, -77.436048, "America/New_York"),
-            createState(getCountryIdByCode("US"), "WA", "Washington", "State", "Olympia", 7614893, 184661.0, 47.037874, -122.900695, "America/Los_Angeles"),
-            createState(getCountryIdByCode("US"), "WV", "West Virginia", "State", "Charleston", 1792147, 62755.0, 38.349820, -81.632623, "America/New_York"),
-            createState(getCountryIdByCode("US"), "WI", "Wisconsin", "State", "Madison", 5822434, 169635.0, 43.073052, -89.401230, "America/Chicago"),
-            createState(getCountryIdByCode("US"), "WY", "Wyoming", "State", "Cheyenne", 578759, 253335.0, 41.140253, -104.820246, "America/Denver"),
-
-            // Canada
-            createState(getCountryIdByCode("CA"), "ON", "Ontario", "Province", "Toronto", 14733119, 1076395.0, 43.653226, -79.383184, "America/Toronto"),
-            createState(getCountryIdByCode("CA"), "BC", "British Columbia", "Province", "Victoria", 5145851, 944735.0, 48.428421, -123.365644, "America/Vancouver"),
-            createState(getCountryIdByCode("CA"), "QC", "Quebec", "Province", "Quebec City", 8575779, 1542056.0, 46.813878, -71.207981, "America/Montreal"),
-            createState(getCountryIdByCode("CA"), "AB", "Alberta", "Province", "Edmonton", 4421876, 661848.0, 53.544389, -113.490927, "America/Edmonton"),
-            createState(getCountryIdByCode("CA"), "MB", "Manitoba", "Province", "Winnipeg", 1379268, 647797.0, 49.895136, -97.138374, "America/Winnipeg"),
-            createState(getCountryIdByCode("CA"), "SK", "Saskatchewan", "Province", "Regina", 1177884, 651036.0, 50.445211, -104.618487, "America/Regina"),
-            createState(getCountryIdByCode("CA"), "NS", "Nova Scotia", "Province", "Halifax", 979115, 55284.0, 44.648763, -63.575239, "America/Halifax"),
-            createState(getCountryIdByCode("CA"), "NB", "New Brunswick", "Province", "Fredericton", 781315, 72908.0, 45.963589, -66.643112, "America/Moncton"),
-            createState(getCountryIdByCode("CA"), "NL", "Newfoundland and Labrador", "Province", "St. John's", 521542, 405212.0, 47.560541, -52.712832, "America/St_Johns"),
-            createState(getCountryIdByCode("CA"), "PE", "Prince Edward Island", "Province", "Charlottetown", 159625, 5660.0, 46.238240, -63.131070, "America/Halifax"),
-
-            // Germany
-            createState(getCountryIdByCode("DE"), "BW", "Baden-Württemberg", "State", "Stuttgart", 11100394, 35751.0, 48.775846, 9.182932, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "BY", "Bavaria", "State", "Munich", 13124737, 70549.0, 48.135125, 11.581981, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "BE", "Berlin", "State", "Berlin", 3669491, 891.0, 52.520008, 13.404954, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "BB", "Brandenburg", "State", "Potsdam", 2521893, 29478.0, 52.390569, 13.064473, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "HB", "Bremen", "State", "Bremen", 681202, 419.0, 53.079296, 8.801694, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "HH", "Hamburg", "State", "Hamburg", 1945232, 755.0, 53.551086, 9.993682, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "HE", "Hesse", "State", "Wiesbaden", 6288080, 21100.0, 50.078218, 8.239761, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "MV", "Mecklenburg-Vorpommern", "State", "Schwerin", 1609815, 23173.0, 53.635502, 11.401250, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "NI", "Lower Saxony", "State", "Hanover", 7993608, 47624.0, 52.375896, 9.732010, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "NW", "North Rhine-Westphalia", "State", "Düsseldorf", 17947221, 34084.0, 51.227144, 6.776164, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "RP", "Rhineland-Palatinate", "State", "Mainz", 4089938, 19854.0, 50.001959, 8.271855, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "SL", "Saarland", "State", "Saarbrücken", 986887, 2571.0, 49.240157, 6.996933, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "SN", "Saxony", "State", "Dresden", 4071971, 18415.0, 51.050411, 13.737262, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "ST", "Saxony-Anhalt", "State", "Magdeburg", 2194782, 20445.0, 52.120533, 11.627624, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "SH", "Schleswig-Holstein", "State", "Kiel", 2903060, 15799.0, 54.323293, 10.122765, "Europe/Berlin"),
-            createState(getCountryIdByCode("DE"), "TH", "Thuringia", "State", "Erfurt", 2133378, 16171.0, 50.979492, 11.026480, "Europe/Berlin"),
-
-            // United Kingdom
-            createState(getCountryIdByCode("GB"), "ENG", "England", "Country", "London", 56286961, 130279.0, 51.507351, -0.127758, "Europe/London"),
-            createState(getCountryIdByCode("GB"), "SCT", "Scotland", "Country", "Edinburgh", 5463300, 78387.0, 55.953251, -3.188361, "Europe/London"),
-            createState(getCountryIdByCode("GB"), "WLS", "Wales", "Country", "Cardiff", 3152879, 20779.0, 51.481583, -3.179090, "Europe/London"),
-            createState(getCountryIdByCode("GB"), "NIR", "Northern Ireland", "Province", "Belfast", 1893667, 13843.0, 54.597280, -5.930120, "Europe/London"),
-
-            // France
-            createState(getCountryIdByCode("FR"), "ARA", "Auvergne-Rhône-Alpes", "Region", "Lyon", 8052300, 69711.0, 45.764043, 4.835659, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "BFC", "Bourgogne-Franche-Comté", "Region", "Dijon", 2792200, 47784.0, 47.322047, 5.041480, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "BRE", "Brittany", "Region", "Rennes", 3340700, 27209.0, 48.111980, -1.674290, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "CVL", "Centre-Val de Loire", "Region", "Orléans", 2559100, 39151.0, 47.902964, 1.909251, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "COR", "Corsica", "Region", "Ajaccio", 344600, 8680.0, 41.919229, 8.738635, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "GES", "Grand Est", "Region", "Strasbourg", 5518500, 57441.0, 48.573405, 7.752111, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "GF", "French Guiana", "Region", "Cayenne", 298700, 83534.0, 4.922420, -52.313453, "America/Cayenne"),
-            createState(getCountryIdByCode("FR"), "GP", "Guadeloupe", "Region", "Basse-Terre", 395700, 1628.0, 16.025000, -61.710000, "America/Guadeloupe"),
-            createState(getCountryIdByCode("FR"), "HDF", "Hauts-de-France", "Region", "Lille", 5962800, 31813.0, 50.629250, 3.057256, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "IDF", "Île-de-France", "Region", "Paris", 12278200, 12011.0, 48.856614, 2.352222, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "MQ", "Martinique", "Region", "Fort-de-France", 375300, 1128.0, 14.608919, -61.078768, "America/Martinique"),
-            createState(getCountryIdByCode("FR"), "YT", "Mayotte", "Region", "Mamoudzou", 279500, 374.0, -12.782381, 45.228776, "Indian/Mayotte"),
-            createState(getCountryIdByCode("FR"), "NOR", "Normandy", "Region", "Rouen", 3302100, 30100.0, 49.443232, 1.099971, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "NAQ", "Nouvelle-Aquitaine", "Region", "Bordeaux", 6000300, 84036.0, 44.837789, -0.579180, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "OCC", "Occitanie", "Region", "Toulouse", 5926100, 72724.0, 43.604652, 1.444209, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "PDL", "Pays de la Loire", "Region", "Nantes", 3801200, 32082.0, 47.218371, -1.553621, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "PAC", "Provence-Alpes-Côte d'Azur", "Region", "Marseille", 5055700, 31400.0, 43.296482, 5.369780, "Europe/Paris"),
-            createState(getCountryIdByCode("FR"), "RE", "Réunion", "Region", "Saint-Denis", 860000, 2511.0, -20.882310, 55.450676, "Indian/Reunion"),
-
-            // Japan
-            createState(getCountryIdByCode("JP"), "01", "Hokkaido", "Prefecture", "Sapporo", 5188441, 83423.0, 43.062096, 141.354370, "Asia/Tokyo"),
-            createState(getCountryIdByCode("JP"), "07", "Fukushima", "Prefecture", "Fukushima", 1835915, 13782.0, 37.760860, 140.474854, "Asia/Tokyo"),
-            createState(getCountryIdByCode("JP"), "13", "Tokyo", "Prefecture", "Tokyo", 14047579, 2187.0, 35.689487, 139.691706, "Asia/Tokyo"),
-            createState(getCountryIdByCode("JP"), "14", "Kanagawa", "Prefecture", "Yokohama", 9198242, 2415.0, 35.447754, 139.642172, "Asia/Tokyo"),
-            createState(getCountryIdByCode("JP"), "27", "Osaka", "Prefecture", "Osaka", 8823355, 1905.0, 34.686391, 135.519669, "Asia/Tokyo"),
-            createState(getCountryIdByCode("JP"), "40", "Fukuoka", "Prefecture", "Fukuoka", 5120263, 4977.0, 33.590355, 130.401718, "Asia/Tokyo"),
-
-            // China
-            createState(getCountryIdByCode("CN"), "BJ", "Beijing", "Municipality", "Beijing", 21542000, 16410.0, 39.904211, 116.407395, "Asia/Shanghai"),
-            createState(getCountryIdByCode("CN"), "SH", "Shanghai", "Municipality", "Shanghai", 24281000, 6340.0, 31.230416, 121.473701, "Asia/Shanghai"),
-            createState(getCountryIdByCode("CN"), "GD", "Guangdong", "Province", "Guangzhou", 126010000, 179800.0, 23.129110, 113.264385, "Asia/Shanghai"),
-            createState(getCountryIdByCode("CN"), "JS", "Jiangsu", "Province", "Nanjing", 84748016, 102600.0, 32.060255, 118.796877, "Asia/Shanghai"),
-            createState(getCountryIdByCode("CN"), "SD", "Shandong", "Province", "Jinan", 101527000, 157100.0, 36.670282, 117.019074, "Asia/Shanghai"),
-
-            // India
-            createState(getCountryIdByCode("IN"), "MH", "Maharashtra", "State", "Mumbai", 122113000, 122113.0, 19.076090, 72.877426, "Asia/Kolkata"),
-            createState(getCountryIdByCode("IN"), "UP", "Uttar Pradesh", "State", "Lucknow", 237882000, 243290.0, 26.846694, 80.946166, "Asia/Kolkata"),
-            createState(getCountryIdByCode("IN"), "TN", "Tamil Nadu", "State", "Chennai", 77841000, 130058.0, 13.082680, 80.270718, "Asia/Kolkata"),
-            createState(getCountryIdByCode("IN"), "KA", "Karnataka", "State", "Bangalore", 65798000, 191791.0, 12.971599, 77.594563, "Asia/Kolkata"),
-            createState(getCountryIdByCode("IN"), "DL", "Delhi", "Union Territory", "New Delhi", 32941000, 1484.0, 28.613939, 77.209021, "Asia/Kolkata"),
-
-            // Australia
-            createState(getCountryIdByCode("AU"), "NSW", "New South Wales", "State", "Sydney", 8166000, 809444.0, -33.868820, 151.209295, "Australia/Sydney"),
-            createState(getCountryIdByCode("AU"), "VIC", "Victoria", "State", "Melbourne", 6629000, 237658.0, -37.813628, 144.963058, "Australia/Melbourne"),
-            createState(getCountryIdByCode("AU"), "QLD", "Queensland", "State", "Brisbane", 5184000, 1852642.0, -27.469771, 153.025124, "Australia/Brisbane"),
-            createState(getCountryIdByCode("AU"), "WA", "Western Australia", "State", "Perth", 2667000, 2645615.0, -31.950527, 115.860458, "Australia/Perth"),
-            createState(getCountryIdByCode("AU"), "SA", "South Australia", "State", "Adelaide", 1770000, 1043514.0, -34.928499, 138.600746, "Australia/Adelaide"),
-            createState(getCountryIdByCode("AU"), "TAS", "Tasmania", "State", "Hobart", 541000, 90758.0, -42.882138, 147.327195, "Australia/Hobart"),
-            createState(getCountryIdByCode("AU"), "ACT", "Australian Capital Territory", "Territory", "Canberra", 431000, 2358.0, -35.280937, 149.130005, "Australia/Canberra"),
-            createState(getCountryIdByCode("AU"), "NT", "Northern Territory", "Territory", "Darwin", 246000, 1420968.0, -12.463739, 130.844446, "Australia/Darwin"),
-
-            // Brazil
-            createState(getCountryIdByCode("BR"), "SP", "São Paulo", "State", "São Paulo", 46289000, 248209.0, -23.550520, -46.633308, "America/Sao_Paulo"),
-            createState(getCountryIdByCode("BR"), "RJ", "Rio de Janeiro", "State", "Rio de Janeiro", 17366000, 43696.0, -22.906847, -43.172896, "America/Sao_Paulo"),
-            createState(getCountryIdByCode("BR"), "MG", "Minas Gerais", "State", "Belo Horizonte", 21292000, 586528.0, -19.916681, -43.934493, "America/Sao_Paulo"),
-            createState(getCountryIdByCode("BR"), "RS", "Rio Grande do Sul", "State", "Porto Alegre", 11423000, 281748.0, -30.034647, -51.217658, "America/Sao_Paulo"),
-            createState(getCountryIdByCode("BR"), "BA", "Bahia", "State", "Salvador", 14930000, 564273.0, -12.579738, -38.509723, "America/Bahia"),
-            createState(getCountryIdByCode("BR"), "PR", "Paraná", "State", "Curitiba", 11517000, 199315.0, -25.427755, -49.273108, "America/Sao_Paulo")
-        );
-
-        stateRepository.saveAll(states);
-        System.out.println("Initialized " + states.size() + " states");
+        // We'll add some major states/provinces for key countries
+        State[] states = {
+            // United States - Major states
+            createState(getCountryIdByCode("US"), "CA", "California", "State", "Sacramento", 39538223, 423970.0, 36.7783, -119.4179, "America/Los_Angeles"),
+            createState(getCountryIdByCode("US"), "TX", "Texas", "State", "Austin", 29145505, 695662.0, 31.9686, -99.9018, "America/Chicago"),
+            createState(getCountryIdByCode("US"), "FL", "Florida", "State", "Tallahassee", 21538187, 170312.0, 27.6648, -81.5158, "America/New_York"),
+            createState(getCountryIdByCode("US"), "NY", "New York", "State", "Albany", 20201249, 141297.0, 43.2994, -74.2179, "America/New_York"),
+            createState(getCountryIdByCode("US"), "PA", "Pennsylvania", "State", "Harrisburg", 13002700, 119283.0, 41.2033, -77.1945, "America/New_York"),
+            
+            // Canada - Provinces
+            createState(getCountryIdByCode("CA"), "ON", "Ontario", "Province", "Toronto", 14733119, 1076395.0, 51.2538, -85.3232, "America/Toronto"),
+            createState(getCountryIdByCode("CA"), "QC", "Quebec", "Province", "Quebec City", 8575779, 1542056.0, 46.8139, -71.2080, "America/Montreal"),
+            createState(getCountryIdByCode("CA"), "BC", "British Columbia", "Province", "Victoria", 5145851, 944735.0, 53.7267, -127.6476, "America/Vancouver"),
+            createState(getCountryIdByCode("CA"), "AB", "Alberta", "Province", "Edmonton", 4428112, 661848.0, 53.9333, -116.5765, "America/Edmonton"),
+            createState(getCountryIdByCode("CA"), "MB", "Manitoba", "Province", "Winnipeg", 1379584, 647797.0, 53.7609, -98.8139, "America/Winnipeg"),
+            
+            // Australia - States
+            createState(getCountryIdByCode("AU"), "NSW", "New South Wales", "State", "Sydney", 8166365, 809444.0, -33.8650, 151.2099, "Australia/Sydney"),
+            createState(getCountryIdByCode("AU"), "VIC", "Victoria", "State", "Melbourne", 6680642, 237658.0, -37.4713, 144.7852, "Australia/Melbourne"),
+            createState(getCountryIdByCode("AU"), "QLD", "Queensland", "State", "Brisbane", 5184817, 1852642.0, -20.9176, 142.7028, "Australia/Brisbane"),
+            createState(getCountryIdByCode("AU"), "WA", "Western Australia", "State", "Perth", 2667179, 2529875.0, -27.6728, 121.6283, "Australia/Perth"),
+            createState(getCountryIdByCode("AU"), "SA", "South Australia", "State", "Adelaide", 1770792, 983482.0, -30.0002, 136.2093, "Australia/Adelaide"),
+            
+            // Brazil - States
+            createState(getCountryIdByCode("BR"), "SP", "São Paulo", "State", "São Paulo", 46289333, 248209.0, -23.5505, -46.6333, "America/Sao_Paulo"),
+            createState(getCountryIdByCode("BR"), "RJ", "Rio de Janeiro", "State", "Rio de Janeiro", 17366164, 43696.0, -22.9068, -43.1729, "America/Sao_Paulo"),
+            createState(getCountryIdByCode("BR"), "MG", "Minas Gerais", "State", "Belo Horizonte", 21292796, 586528.0, -19.9102, -43.9050, "America/Sao_Paulo"),
+            createState(getCountryIdByCode("BR"), "RS", "Rio Grande do Sul", "State", "Porto Alegre", 11422479, 281748.0, -30.0346, -51.2177, "America/Sao_Paulo"),
+            createState(getCountryIdByCode("BR"), "BA", "Bahia", "State", "Salvador", 14930634, 564273.0, -12.5797, -41.7007, "America/Sao_Paulo"),
+            
+            // India - States
+            createState(getCountryIdByCode("IN"), "MH", "Maharashtra", "State", "Mumbai", 120777787, 307713.0, 19.7515, 75.7139, "Asia/Kolkata"),
+            createState(getCountryIdByCode("IN"), "UP", "Uttar Pradesh", "State", "Lucknow", 231507652, 243290.0, 26.8467, 80.9462, "Asia/Kolkata"),
+            createState(getCountryIdByCode("IN"), "DL", "Delhi", "Union Territory", "New Delhi", 32941086, 1484.0, 28.7041, 77.1025, "Asia/Kolkata"),
+            createState(getCountryIdByCode("IN"), "KA", "Karnataka", "State", "Bengaluru", 65798864, 191791.0, 15.3173, 75.7139, "Asia/Kolkata"),
+            createState(getCountryIdByCode("IN"), "TN", "Tamil Nadu", "State", "Chennai", 75695374, 130058.0, 11.1271, 78.6569, "Asia/Kolkata")
+        };
+        
+        stateRepository.saveAll(Arrays.asList(states));
+        System.out.println("✅ Initialized " + states.length + " states/provinces");
     }
     
-    /**
-     * Helper method to create a state with comprehensive data
-     */
-    private State createState(String countryId, String code, String name, String type, String capital, long population, double area, double lat, double lon, String timezone) {
-        State state = new State();        
-        state.setCountryId(countryId);
-        state.setCode(code);
-        state.setName(name);
-        state.setType(type);
-        state.setCapital(capital);
-        state.setPopulation(population);
-        state.setArea(area);
-        state.setLatitude(lat);
-        state.setLongitude(lon);
-        state.setTimezone(timezone);
-        return state;
-    }
-
     /**
      * Initialize cities with real data
      */
     private void initializeCities() {
-        List<City> cities = Arrays.asList(
+        City[] cities = {
             // Major world capitals and cities - More comprehensive list
             
             // United States - Major cities
@@ -408,23 +254,147 @@ public class DataInitializationService implements CommandLineRunner {
             createCityExtended("Rio de Janeiro", "BR", "RJ", -22.9068, -43.1729, 6718903, 2, "P"),
             createCityExtended("Brasília", "BR", "DF", -15.7801, -47.9292, 3055149, 1136, "P"),
             createCityExtended("Salvador", "BR", "BA", -12.9714, -38.5014, 2886698, 8, "P"),
-            createCityExtended("Fortaleza", "BR", "CE", -3.7319, -38.5267, 2686612, 20, "P")
-        );
-
-        cityRepository.saveAll(cities);
-        System.out.println("Initialized " + cities.size() + " cities");
+            
+            // Russia
+            createCityExtended("Moscow", "RU", "MOW", 55.7558, 37.6173, 12506468, 156, "P"),
+            createCityExtended("Saint Petersburg", "RU", "SPE", 59.9343, 30.3351, 5351935, 5, "P"),
+            createCityExtended("Novosibirsk", "RU", "NVS", 55.0084, 82.9357, 1612844, 164, "P"),
+            createCityExtended("Yekaterinburg", "RU", "SVE", 56.8389, 60.6057, 1484474, 247, "P"),
+            createCityExtended("Kazan", "RU", "TAT", 55.8304, 49.0661, 1243500, 61, "P"),
+            
+            // South Africa
+            createCityExtended("Johannesburg", "ZA", "GP", -26.2041, 28.0473, 5783771, 1753, "P"),
+            createCityExtended("Cape Town", "ZA", "WC", -33.9249, 18.4241, 433688, 25, "P"),
+            createCityExtended("Durban", "ZA", "KZN", -29.8587, 31.0218, 595066, 8, "P"),
+            createCityExtended("Pretoria", "ZA", "GT", -25.7479, 28.2293, 741651, 1332, "P"),
+            
+            // Nigeria
+            createCityExtended("Lagos", "NG", "LA", 6.5244, 3.3792, 14862115, 11, "P"),
+            createCityExtended("Kano", "NG", "KN", 12.0001, 8.5167, 4103125, 455, "P"),
+            createCityExtended("Ibadan", "NG", "OD", 7.3776, 3.9059, 3565671, 228, "P"),
+            createCityExtended("Abuja", "NG", "FC", 9.0765, 7.3986, 3507000, 840, "P"),
+            
+            // Egypt
+            createCityExtended("Cairo", "EG", "C", 30.0444, 31.2357, 9503954, 23, "P"),
+            createCityExtended("Alexandria", "EG", "ALX", 31.2001, 29.9187, 5200000, 1, "P"),
+            createCityExtended("Giza", "EG", "GZ", 30.0081, 31.2118, 5598402, 20, "P"),
+            createCityExtended("Port Said", "EG", "PTS", 31.2653, 32.2881, 650000, 1, "P"),
+            
+            // Saudi Arabia
+            createCityExtended("Riyadh", "SA", "01", 24.7136, 46.6753, 7665000, 612, "P"),
+            createCityExtended("Jeddah", "SA", "02", 21.4858, 39.1925, 4600000, 12, "P"),
+            createCityExtended("Mecca", "SA", "14", 21.3891, 39.5692, 2300000, 289, "P"),
+            createCityExtended("Medina", "SA", "03", 24.5247, 39.5692, 1700000, 635, "P"),
+            
+            // Turkey
+            createCityExtended("Istanbul", "TR", "34", 41.0082, 28.9784, 15462452, 39, "P"),
+            createCityExtended("Ankara", "TR", "06", 39.9334, 32.8597, 5503985, 870, "P"),
+            createCityExtended("Izmir", "TR", "35", 38.4237, 27.1428, 4320519, 2, "P"),
+            createCityExtended("Bursa", "TR", "16", 40.1826, 29.0668, 2936804, 100, "P"),
+            
+            // Indonesia
+            createCityExtended("Jakarta", "ID", "JK", -6.2088, 106.8456, 10770482, 8, "P"),
+            createCityExtended("Surabaya", "ID", "JI", -7.2575, 112.7521, 2805950, 5, "P"),
+            createCityExtended("Bandung", "ID", "JB", -6.9175, 107.6191, 2575478, 768, "P"),
+            createCityExtended("Medan", "ID", "SU", 3.5952, 98.6722, 2233837, 2.5, "P"),
+            
+            // Thailand
+            createCityExtended("Bangkok", "TH", "10", 13.7563, 100.5018, 10539000, 1, "P"),
+            createCityExtended("Chiang Mai", "TH", "50", 18.7877, 98.9931, 1318915, 313, "P"),
+            createCityExtended("Phuket", "TH", "83", 7.8804, 98.3923, 85725, 1, "P"),
+            createCityExtended("Pattaya", "TH", "20", 12.9236, 100.8825, 223165, 7, "P"),
+            
+            // Vietnam
+            createCityExtended("Ho Chi Minh City", "VN", "SG", 10.8231, 106.6297, 8993000, 19, "P"),
+            createCityExtended("Hanoi", "VN", "HN", 21.0285, 105.8542, 7781631, 19, "P"),
+            createCityExtended("Da Nang", "VN", "DN", 16.0544, 108.2022, 1229653, 11, "P"),
+            createCityExtended("Hai Phong", "VN", "HP", 20.8449, 106.6881, 2019171, 5, "P")
+        };
+        
+        cityRepository.saveAll(Arrays.asList(cities));
+        System.out.println("✅ Initialized " + cities.length + " cities");
     }
     
     /**
-     * Helper method to create a city with extended data
+     * Initialize a simple test city if no cities exist
      */
-    private City createCityExtended(String name, String countryCode, String stateCode, double lat, double lon, long population, long elevation, String featureCode) {
+    private void initializeTestCity() {
+        City testCity = new City();
+        testCity.setName("Test City");
+        testCity.setLatitude(40.7128);
+        testCity.setLongitude(-74.0060);
+        testCity.setPopulation(1000000);
+        testCity.setElevation(10L);
+        testCity.setFeatureCode("P");
+        testCity.setImportance(5);
+        
+        cityRepository.save(testCity);
+        System.out.println("✅ Created test city for development");
+    }
+    
+    /**
+     * Initialize default user for testing
+     */
+    private void initializeDefaultUser() {
+        User defaultUser = new User("admin", "admin@example.com");
+        defaultUser.setFirstName("Admin");
+        defaultUser.setLastName("User");
+        defaultUser.setPasswordHash(passwordEncoder.encode("admin123"));
+        userRepository.save(defaultUser);
+        System.out.println("✅ Created default user: admin/admin123");
+    }
+    
+    /**
+     * Helper method to create a country
+     */
+    private Country createCountry(String code, String code3, int numericCode, String name, String continent, 
+                                 String subregion, long population, double area, List<String> currencies, 
+                                 List<String> languages, String capital) {
+        Country country = new Country();
+        country.setCode(code);
+        country.setCode3(code3);
+        country.setNumericCode(numericCode);
+        country.setName(name);
+        country.setContinent(continent);
+        country.setSubregion(subregion);
+        country.setPopulation(population);
+        country.setArea(area);
+        country.setCurrencies(currencies);
+        country.setLanguages(languages);
+        country.setCapital(capital);
+        return country;
+    }
+    
+    /**
+     * Helper method to create a state/province
+     */
+    private State createState(String countryId, String code, String name, String type, String capital, 
+                             long population, double area, double latitude, double longitude, String timezone) {
+        State state = new State();
+        state.setCountryId(countryId);
+        state.setCode(code);
+        state.setName(name);
+        state.setType(type);
+        state.setCapital(capital);
+        state.setPopulation(population);
+        state.setArea(area);
+        state.setLatitude(latitude);
+        state.setLongitude(longitude);
+        state.setTimezone(timezone);
+        return state;
+    }
+    
+    /**
+     * Helper method to create a city with extended information
+     */
+    private City createCityExtended(String name, String countryCode, String stateCode, 
+                                   double lat, double lon, long population, double elevation, String featureCode) {
         City city = new City();
         city.setName(name);
         city.setLatitude(lat);
         city.setLongitude(lon);
         city.setPopulation(population);
-        city.setElevation(elevation);
+        city.setElevation((long)elevation);
         city.setFeatureCode(featureCode);
         city.setImportance(10); // Default importance
         

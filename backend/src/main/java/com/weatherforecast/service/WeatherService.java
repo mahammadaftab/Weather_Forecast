@@ -17,4 +17,9 @@ public interface WeatherService {
     List<WeatherAlert> getAllActiveAlerts();
     WeatherData updateWeatherData(WeatherData weatherData);
     List<WeatherData> getHistoricalWeather(String cityId, LocalDateTime start, LocalDateTime end);
+    
+    // New methods for fetching weather by coordinates
+    WeatherData getCurrentWeatherByCoordinates(double lat, double lon);
+    List<WeatherData> getHourlyForecastByCoordinates(double lat, double lon, int hours);
+    List<WeatherData> getDailyForecastByCoordinates(double lat, double lon, int days);
 }

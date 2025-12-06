@@ -9,6 +9,7 @@ public class ValidationUtil {
     
     // Regular expression patterns for validation
     private static final Pattern CITY_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]{1,50}$");
+    private static final Pattern MONGO_ID_PATTERN = Pattern.compile("^[a-f0-9]{24}$");
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-_\\.]{1,100}$");
     private static final Pattern COUNTRY_CODE_PATTERN = Pattern.compile("^[A-Z]{2}$");
     private static final Pattern STATE_CODE_PATTERN = Pattern.compile("^[A-Z0-9]{1,10}$");
@@ -20,7 +21,7 @@ public class ValidationUtil {
      * @return true if valid, false otherwise
      */
     public static boolean isValidCityId(String cityId) {
-        return cityId != null && CITY_ID_PATTERN.matcher(cityId).matches();
+        return cityId != null && (CITY_ID_PATTERN.matcher(cityId).matches() || MONGO_ID_PATTERN.matcher(cityId).matches());
     }
     
     /**

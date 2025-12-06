@@ -6,6 +6,8 @@ interface SearchResult {
   name: string;
   country: string;
   state?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface SearchBarProps {
@@ -29,22 +31,45 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onResultSelect }) => {
       setIsLoading(true);
       setShowResults(true);
       
-      // Call API to search for cities
-      locationApi.searchCities(value)
+      // Call API to search for locations
+      locationApi.searchLocations(value)
         .then((data) => {
-          const formattedResults: SearchResult[] = data.map((item: any) => ({
-            id: item.id,
+          // Filter out any null or undefined results
+          const validData = data.filter((item: any) => item && (item.id || (item.latitude && item.longitude)));
+          const formattedResults: SearchResult[] = validData.map((item: any) => ({
+            id: item.id || `${item.latitude},${item.longitude}`,
             name: item.name,
-            country: item.countryCode,
-            state: item.stateCode
+            country: item.countryCode || item.country || 'Unknown',
+            state: item.stateCode || item.state || '',
+            latitude: item.latitude,
+            longitude: item.longitude
           }));
           setResults(formattedResults);
           setIsLoading(false);
         })
         .catch((error) => {
           console.error('Search failed:', error);
-          setResults([]);
-          setIsLoading(false);
+          // Fallback to search cities in database
+          locationApi.searchCities(value)
+            .then((data) => {
+              // Filter out any null or undefined results
+              const validData = data.filter((item: any) => item && item.id);
+              const formattedResults: SearchResult[] = validData.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                country: item.countryCode || item.country || 'Unknown',
+                state: item.stateCode || item.state || '',
+                latitude: item.latitude,
+                longitude: item.longitude
+              }));
+              setResults(formattedResults);
+              setIsLoading(false);
+            })
+            .catch((error) => {
+              console.error('Search cities failed:', error);
+              setResults([]);
+              setIsLoading(false);
+            });
         });
     } else {
       setResults([]);
@@ -54,7 +79,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onResultSelect }) => {
 
   // Handle result selection
   const handleResultClick = (result: SearchResult) => {
-    setQuery(`${result.name}, ${result.country}`);
+    setQuery(`${result.name}${result.state ? `, ${result.state}` : ''}, ${result.country}`);
     setShowResults(false);
     onResultSelect(result);
   };
@@ -91,7 +116,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onResultSelect }) => {
             value={query}
             onChange={handleInputChange}
             onFocus={() => query.length > 2 && setShowResults(true)}
-            placeholder="Search for a city..." 
+            placeholder="Search for a city, country, or location..." 
             className="w-full p-4 pl-12 rounded-2xl bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50"
           />
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 absolute left-4 top-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">

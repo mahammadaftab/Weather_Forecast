@@ -132,4 +132,62 @@ public class LocationServiceImpl implements LocationService {
         GeoLocationService.GeoLocation location = geoLocationService.reverseGeocode(latitude, longitude);
         return cityRepository.findByName(location.getCityName());
     }
+    
+    /**
+     * Create default cities for testing purposes
+     */
+    public void createDefaultCities() {
+        // Get the US country
+        Optional<Country> usCountryOpt = countryRepository.findByCode("US");
+        if (!usCountryOpt.isPresent()) {
+            return; // US country not found
+        }
+        
+        Country usCountry = usCountryOpt.get();
+        String usCountryId = usCountry.getId();
+        
+        // Create some major US cities
+        createCityIfNotExists("New York", usCountryId, null, 40.7128, -74.0060);
+        createCityIfNotExists("Los Angeles", usCountryId, null, 34.0522, -118.2437);
+        createCityIfNotExists("Chicago", usCountryId, null, 41.8781, -87.6298);
+        createCityIfNotExists("Houston", usCountryId, null, 29.7604, -95.3698);
+        createCityIfNotExists("Phoenix", usCountryId, null, 33.4484, -112.0740);
+        
+        // Get the UK country
+        Optional<Country> ukCountryOpt = countryRepository.findByCode("GB");
+        if (ukCountryOpt.isPresent()) {
+            Country ukCountry = ukCountryOpt.get();
+            String ukCountryId = ukCountry.getId();
+            createCityIfNotExists("London", ukCountryId, null, 51.5074, -0.1278);
+        }
+        
+        // Get Japan
+        Optional<Country> jpCountryOpt = countryRepository.findByCode("JP");
+        if (jpCountryOpt.isPresent()) {
+            Country jpCountry = jpCountryOpt.get();
+            String jpCountryId = jpCountry.getId();
+            createCityIfNotExists("Tokyo", jpCountryId, null, 35.6762, 139.6503);
+        }
+    }
+    
+    private void createCityIfNotExists(String name, String countryId, String stateId, double latitude, double longitude) {
+        // Check if city already exists by name and country
+        List<City> existingCities = cityRepository.findByCountryId(countryId);
+        boolean cityExists = existingCities.stream()
+            .anyMatch(city -> city.getName().equalsIgnoreCase(name));
+            
+        if (!cityExists) {
+            City city = new City();
+            city.setName(name);
+            city.setCountryId(countryId);
+            city.setStateId(stateId);
+            city.setLatitude(latitude);
+            city.setLongitude(longitude);
+            city.setPopulation(1000000L); // Default population
+            city.setElevation(0L); // Default elevation
+            city.setFeatureCode("PPL"); // Populated place
+            city.setImportance(10); // Default importance
+            cityRepository.save(city);
+        }
+    }
 }

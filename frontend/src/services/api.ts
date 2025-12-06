@@ -2,15 +2,30 @@
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
+// Store JWT token
+let authToken: string | null = null;
+
+// Set the auth token
+export const setAuthToken = (token: string | null) => {
+  authToken = token;
+};
+
 // Generic fetch function with error handling
 const apiFetch = async (url: string, options: RequestInit = {}) => {
   try {
+    // Add auth header if token exists
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     });
     
     if (!response.ok) {
@@ -44,6 +59,11 @@ export const authApi = {
     return apiFetch(`${API_BASE_URL}/auth/signin`, {
       method: 'POST',
       body: JSON.stringify({ username, password }),
+    }).then((response) => {
+      if (response.token) {
+        setAuthToken(response.token);
+      }
+      return response;
     });
   },
   
@@ -77,12 +97,53 @@ export const locationApi = {
     return apiFetch(`${API_BASE_URL}/location/cities/search?name=${encodeURIComponent(name)}`);
   },
   
+  // New method to search any location
+  searchLocations: (query: string) => {
+    return apiFetch(`${API_BASE_URL}/location/search?query=${encodeURIComponent(query)}`);
+  },
+  
   getCityById: (cityId: string) => {
     return apiFetch(`${API_BASE_URL}/location/cities/${cityId}`);
   },
 };
 
-// Weather API
+// Public Weather API (no authentication required)
+export const publicWeatherApi = {
+  getCurrentWeather: (cityId: string) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/current/${cityId}`);
+  },
+  
+  getHourlyForecast: (cityId: string, hours: number = 24) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/forecast/hourly/${cityId}?hours=${hours}`);
+  },
+  
+  getDailyForecast: (cityId: string, days: number = 7) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/forecast/daily/${cityId}?days=${days}`);
+  },
+  
+  getWeatherAlerts: (cityId: string) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/alerts/${cityId}`);
+  },
+  
+  getHistoricalWeather: (cityId: string, start: string, end: string) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/historical/${cityId}?start=${start}&end=${end}`);
+  },
+  
+  // New methods to get weather by coordinates
+  getCurrentWeatherByCoordinates: (lat: number, lon: number) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/current-by-coordinates?lat=${lat}&lon=${lon}`);
+  },
+  
+  getHourlyForecastByCoordinates: (lat: number, lon: number, hours: number = 24) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/forecast/hourly-by-coordinates?lat=${lat}&lon=${lon}&hours=${hours}`);
+  },
+  
+  getDailyForecastByCoordinates: (lat: number, lon: number, days: number = 7) => {
+    return apiFetch(`${API_BASE_URL}/weather/public/forecast/daily-by-coordinates?lat=${lat}&lon=${lon}&days=${days}`);
+  },
+};
+
+// Weather API (requires authentication)
 export const weatherApi = {
   getCurrentWeather: (cityId: string) => {
     return apiFetch(`${API_BASE_URL}/weather/current/${cityId}`);
@@ -116,5 +177,7 @@ export default {
   authApi,
   locationApi,
   weatherApi,
+  publicWeatherApi,
   geolocationApi,
+  setAuthToken,
 };

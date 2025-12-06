@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import weatherWebSocket from '../services/websocket';
-import { weatherApi } from '../services/api';
+import { publicWeatherApi } from '../services/api';
 
 interface WeatherData {
   temperature: number;
@@ -17,75 +17,81 @@ interface WeatherData {
   sunrise: string;
   sunset: string;
   timestamp: string;
+  cityName?: string;
 }
 
-const useWeatherUpdates = (cityId: string | null) => {
+const useWeatherUpdates = (cityId: string | null, latitude?: number, longitude?: number) => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!cityId) return;
-
-    const handleWeatherUpdate = (data: any) => {
-      try {
-        setWeatherData({
-          temperature: data.temperature,
-          feelsLike: data.feelsLike,
-          condition: data.weatherMain || data.condition,
-          icon: data.weatherIcon || data.icon,
-          humidity: data.humidity,
-          windSpeed: data.windSpeed,
-          windDirection: data.windDirection || 0,
-          pressure: data.pressure,
-          uvIndex: data.uvIndex || 0,
-          visibility: data.visibility || 0,
-          clouds: data.clouds || 0,
-          sunrise: data.sunrise || '',
-          sunset: data.sunset || '',
-          timestamp: data.timestamp
-        });
-        // Clear any previous errors when we receive data
-        setError(null);
-      } catch (err) {
-        console.error('Failed to process weather update:', err);
-        setError('Failed to process weather update');
-      }
-    };
-
-    // Fetch initial weather data
-    const fetchInitialWeatherData = async () => {
-      try {
-        const data = await weatherApi.getCurrentWeather(cityId);
-        handleWeatherUpdate(data);
-      } catch (err: any) {
-        console.error('Failed to fetch initial weather data:', err);
-        setError(err.message || 'Failed to fetch initial weather data');
-      }
-    };
-
-    // Connect to WebSocket
-    try {
-      weatherWebSocket.connect(cityId);
-      weatherWebSocket.subscribe(handleWeatherUpdate);
-      setIsConnected(true);
-      setError(null);
+    // If we have coordinates, fetch weather by coordinates
+    if (latitude && longitude) {
+      const fetchWeatherByCoordinates = async () => {
+        try {
+          const data = await publicWeatherApi.getCurrentWeatherByCoordinates(latitude, longitude);
+          handleWeatherUpdate(data);
+        } catch (err: any) {
+          console.error('Failed to fetch weather data by coordinates:', err);
+          setError(err.message || 'Failed to fetch weather data');
+        }
+      };
       
-      // Fetch initial data
-      fetchInitialWeatherData();
-    } catch (err: any) {
-      console.error('Failed to connect to WebSocket:', err);
-      setError(err.message || 'Failed to connect to weather updates');
-      setIsConnected(false);
+      fetchWeatherByCoordinates();
+      return;
     }
-
-    // Cleanup function
+    
+    // If we have a city ID, fetch weather by city ID
+    if (cityId) {
+      const fetchWeatherByCityId = async () => {
+        try {
+          const data = await publicWeatherApi.getCurrentWeather(cityId);
+          handleWeatherUpdate(data);
+        } catch (err: any) {
+          console.error('Failed to fetch weather data by city ID:', err);
+          setError(err.message || 'Failed to fetch weather data');
+        }
+      };
+      
+      fetchWeatherByCityId();
+      return;
+    }
+    
+    // Clean up function
     return () => {
-      weatherWebSocket.unsubscribe(handleWeatherUpdate);
-      weatherWebSocket.disconnect();
-      setIsConnected(false);
+      // Any cleanup code if needed
     };
-  }, [cityId]);
+  }, [cityId, latitude, longitude]);
+
+  const handleWeatherUpdate = (data: any) => {
+    try {
+      // Map the incoming data to our WeatherData interface
+      const mappedData: WeatherData = {
+        temperature: data.temperature,
+        feelsLike: data.feelsLike,
+        condition: data.weatherMain || data.condition || 'Unknown',
+        icon: data.weatherIcon || data.icon || '❓',
+        humidity: data.humidity,
+        windSpeed: data.windSpeed,
+        windDirection: data.windDirection,
+        pressure: data.pressure,
+        uvIndex: data.uvIndex || 0,
+        visibility: data.visibility,
+        clouds: data.clouds,
+        sunrise: data.sunrise,
+        sunset: data.sunset,
+        timestamp: data.timestamp,
+        cityName: data.cityName
+      };
+      
+      setWeatherData(mappedData);
+      setError(null);
+    } catch (err: any) {
+      console.error('Failed to process weather data:', err);
+      setError('Failed to process weather data');
+    }
+  };
 
   return { weatherData, isConnected, error };
 };

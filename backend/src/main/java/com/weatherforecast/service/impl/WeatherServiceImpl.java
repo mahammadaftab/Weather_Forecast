@@ -3,6 +3,7 @@ package com.weatherforecast.service.impl;
 import com.weatherforecast.model.WeatherData;
 import com.weatherforecast.model.WeatherAlert;
 import com.weatherforecast.repository.WeatherDataRepository;
+import com.weatherforecast.service.WeatherApiService;
 import com.weatherforecast.service.WeatherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,6 +19,9 @@ public class WeatherServiceImpl implements WeatherService {
     
     @Autowired
     private WeatherDataRepository weatherDataRepository;
+    
+    @Autowired
+    private WeatherApiService weatherApiService;
     
     @Override
     @Cacheable(value = "currentWeather", key = "#cityId")
@@ -67,5 +71,21 @@ public class WeatherServiceImpl implements WeatherService {
     @Override
     public List<WeatherData> getHistoricalWeather(String cityId, LocalDateTime start, LocalDateTime end) {
         return weatherDataRepository.findByCityIdAndTimestampBetweenOrderByTimestampAsc(cityId, start, end);
+    }
+    
+    // New implementations for fetching weather by coordinates
+    @Override
+    public WeatherData getCurrentWeatherByCoordinates(double lat, double lon) {
+        return weatherApiService.getCurrentWeatherByCoordinates(lat, lon);
+    }
+    
+    @Override
+    public List<WeatherData> getHourlyForecastByCoordinates(double lat, double lon, int hours) {
+        return weatherApiService.getHourlyForecastByCoordinates(lat, lon, hours);
+    }
+    
+    @Override
+    public List<WeatherData> getDailyForecastByCoordinates(double lat, double lon, int days) {
+        return weatherApiService.getDailyForecastByCoordinates(lat, lon, days);
     }
 }
